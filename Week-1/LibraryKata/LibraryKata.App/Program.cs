@@ -1,6 +1,7 @@
 ﻿//If I have code from another namespace I want to use here - I use a using statement
 
 using Library.Domain;
+using LibraryKata.Domain;
 
 namespace LibraryKata.App; // A namespace is like a bucket or logical container for different related code files.
 
@@ -19,6 +20,7 @@ public class Program
         //that code to run, I need to call it inside Main()
         DataTypesAndOperators();
         ClassesExample();
+        OopDemo();
     }
 
     private static void DataTypesAndOperators() //If I had arguments, or inputs for this method, they would go inside the parenthesis after the method name.
@@ -159,4 +161,49 @@ public class Program
         Console.WriteLine($"Checking out The Little Prince: {littlePrince.Checkout()}"); // false
     }
 
+
+    public static void OopDemo()
+    {
+        Console.WriteLine("\n\n == OOP DEMO ==");
+
+        //Leveraging polymorphism - Books, ReferenceBooks, and Magazines - all are LibraryItem
+        LibraryItem[] catalog =
+        {
+          new Book("Dune", "Frank Herbert", 2),
+          new ReferenceBook("C# Language Standards", "Microsoft", "Technology"),
+          new Magazine("Sports Illustrated", "Francisco", 5, "Conde Naste")
+        };
+
+        foreach(LibraryItem item in catalog){
+        Console.WriteLine(item.Describe());
+        }
+
+        //We can even use interfaces as reference types
+        foreach(LibraryItem item in catalog)
+        {
+            if(item is ILendable lendable)
+            {
+                Console.WriteLine($"{item.Title} : checkout -> {lendable.Checkout()}");
+            }
+            else
+            {
+                Console.WriteLine($"{item.Title} is reference only");  
+            }
+        }
+        // overide vs new behaviour
+        Magazine wired = new Magazine("Wired", "Luis", 3, "Conde Naste");
+        LibraryItem baseMag = wired;
+
+        Console.WriteLine("== Override vs New  on the same object, different ref type ==");
+        Console.WriteLine($"Magazine reference -> {wired.Describe()}");
+        Console.WriteLine($"LibraryItem reference -> {baseMag.Describe()}");
+
+    }
+
 }
+
+
+
+//Concrete & Abstract classes
+// A concrete class is a class that can be instantiated directly.
+// An abstract class is a class that cannot be instantiated directly and is meant to be inherited by other classes.
