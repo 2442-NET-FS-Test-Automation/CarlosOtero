@@ -52,6 +52,89 @@ public class Program
         // to make youur code easier to write. For example, Let's say I want to add 1 to the value of total
         // I could do something like
         // total = total + 1; - ORRR
-        total += 1; //arithmethic shorthand for the same thing, also works 
+        total += 1; //arithmethic shorthand for the same thing, also works for *= /= -=
+
+
     }   
+
+
+    private static void ControlFlow(){
+        Console.WriteLine("\n== Control Flow ==");
+        int copiesAvailable = 0;
+        bool isMember = true;
+
+        if(copiesAvailable > 1)
+            Console.WriteLine("Available for checkout!");
+        else if (copiesAvailable == 1)
+            Console.WriteLine("Last copy!");
+        else{
+            Console.WriteLine("Out of stock!");
+            Console.WriteLine("Check again later!");
+            }
+
+        // Switch
+
+        //Classic switch - notice C# cares about intent a lot! No fall through like in other languages
+        string genre = "Mistery";
+        switch (genre)
+        {
+            case "Mystery":
+                Console.WriteLine("Check section A");
+                break;
+            case "Science Fiction":
+                Console.WriteLine("Check section F");
+                break;
+            default: //While optional, a default case to catch any edge cases is best practices
+                Console.WriteLine("uh oh");
+                break;
+        }
+
+        //New in .NET 8, Switch Expressions! You don't have to use these - they probably won't come up in QC, but they're used out in real world code, so here is an example.
+        //In a switch expression, we want a return value from the switch - we can then use that value to print out a result
+
+        string section = genre switch
+        {
+          //This is my expression body
+            "Mystery" => "Section A",
+            "Science Fiction" => "Section F",
+            _ => "Uh oh" //default
+        };
+        Console.WriteLine(section);
+
+        private static void Loops()
+    {
+        for(int day = 1; day <= 3; day++)
+        {
+            Console.WriteLine($"Reminder day {day}: fee so far {CalculateLateFee(day)}");
+        }
+        int onShelf = 3;
+        while (onShelf > 0)
+        
+            Console.WriteLine($"{onShelf} copies on the shelf!");
+            onShelf--; // quick decrement shorthand
+
+        Console.WriteLine("No copies on shelf!");
+        string myString ="dog";
+        myString = "cat";
+        //Value types (ints, double, char) Stored in the stack they are primitive
+        //Heap a big blob that has continuous blocks of memory, a string is an example of a reference type that is stored on the heap (It point to the location in the heap where the string is actually stored).
+
+    }
+
+    private static decimal CalculateLateFee(int daysLate) => daysLate * 2;
+    
+    private static void ArraysWork()
+    {
+        //C# provide for Arrays as well as Lists and other collections - we'll get to those later.
+        string [] books = {"Dune", "Harry Potter", "Percy Jackson", "Lord of the Rings"};
+
+        Console.WriteLine(books[2]); //I can get access to individual elements - keeping in mind we index at 0
+        
+        //C# Allows for for-each loops
+        foreach(string book in books)
+        {
+            Console.WriteLine(book);
+        }
+    }
+
 }
