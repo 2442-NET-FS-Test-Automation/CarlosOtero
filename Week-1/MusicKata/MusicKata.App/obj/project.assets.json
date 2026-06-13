@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Charlie\\Documents\\Net Automation\\CarlosOtero\\Week-1\\LibraryKata.App\\LibraryKata.App.csproj",
-      "projectName": "LibraryKata.App",
-      "projectPath": "C:\\Users\\Charlie\\Documents\\Net Automation\\CarlosOtero\\Week-1\\LibraryKata.App\\LibraryKata.App.csproj",
+      "projectUniqueName": "C:\\Users\\Charlie\\Documents\\Net Automation\\CarlosOtero\\Week-1\\MusicKata\\MusicKata.App\\MusicKata.App.csproj",
+      "projectName": "MusicKata.App",
+      "projectPath": "C:\\Users\\Charlie\\Documents\\Net Automation\\CarlosOtero\\Week-1\\MusicKata\\MusicKata.App\\MusicKata.App.csproj",
       "packagesPath": "C:\\Users\\Charlie\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Charlie\\Documents\\Net Automation\\CarlosOtero\\Week-1\\LibraryKata.App\\obj\\",
+      "outputPath": "C:\\Users\\Charlie\\Documents\\Net Automation\\CarlosOtero\\Week-1\\MusicKata\\MusicKata.App\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Charlie\\AppData\\Roaming\\NuGet\\NuGet.Config"
