@@ -7,4 +7,6 @@ public interface IRent
     //Only method signatures, not bodies, not even modifiers
     bool Rent();
     void Return();
+
+    bool CanRent { get; set; }
 }

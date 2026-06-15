@@ -6,6 +6,7 @@ public class Guitar : InstrumentItem, IRent
     public int NumberOfStrings { get; set; }
 
     public bool CanRent { get; set; }
+
     public int AmountAvailable { get; private set; }
 
     public Guitar(int price, string type, string brand, string model, int numberOfStrings, bool canRent, int amountAvailable) : base(price, brand, model)
@@ -26,6 +27,7 @@ public class Guitar : InstrumentItem, IRent
         if (CanRent && AmountAvailable > 0)
         {
             AmountAvailable--;
+            CanRent = false;
             Console.WriteLine($"You have rented a {Brand} {Model} guitar.");
             return true;
         }
@@ -35,6 +37,7 @@ public class Guitar : InstrumentItem, IRent
             return false;
         }
     }
-     public void Return() => AmountAvailable++;
+
+    public void Return() => AmountAvailable++;
 
 }

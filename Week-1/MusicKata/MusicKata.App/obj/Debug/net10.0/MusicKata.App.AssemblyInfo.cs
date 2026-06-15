@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MusicKata.App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eceb0a413d39e269f97848e9864c27eb4c9f576e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5532928ec552f4957e5737426ed484c1e6a135c8")]
 [assembly: System.Reflection.AssemblyProductAttribute("MusicKata.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MusicKata.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

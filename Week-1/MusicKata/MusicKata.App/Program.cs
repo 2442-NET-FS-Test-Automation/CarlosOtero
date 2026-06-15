@@ -10,20 +10,20 @@ public class Program
         
             List<InstrumentItem> guitarSection = new List<InstrumentItem>
             {
-                new Guitar(1200, "Electric", "Fender", "Stratocaster", 6, true, 5),
-                new Guitar(1500, "Acoustic", "Gibson", "J-45", 6, false, 3),
+                new Guitar(1500, "Electric", "Fender", "Stratocaster", 6, true, 3),
+                new Guitar(1200, "Acoustic", "Gibson", "J-45", 6, false, 2),
                 new Guitar(1000, "Bass", "Ibanez", "SR500", 4, true, 4),
-                new Guitar(2000, "Electric", "PRS", "Custom 24", 6, true, 2),
-                new Guitar(800, "Acoustic", "Yamaha", "FG800", 6, false, 6)
+                new Guitar(1800, "Electric", "PRS", "Custom 24", 6, true, 1),
+                new Guitar(900, "Acoustic", "Taylor", "214ce", 6, false, 5)
             };
         catalog.Add(guitarSection);
         List<InstrumentItem> pianoSection = new List<InstrumentItem>
         {
-                new Piano(3000, "Grand", "Steinway", "Model D", 1),
-                new Piano(2500, "Upright", "Yamaha", "U3", 2),
-                new Piano(2000, "Digital", "Roland", "FP-90X", 4),
-                new Piano(3500, "Baby Grand", "Kawai", "GL-10", 1),
-                new Piano(4000, "Concert Grand", "Bösendorfer", "280VC", 1),
+                new Piano(3000, "Grand", "Steinway", "Model D", true, 1),
+                new Piano(2500, "Upright", "Yamaha", "U3", true, 2),
+                new Piano(2000, "Digital", "Roland", "FP-90X", false, 4),
+                new Piano(3500, "Baby Grand", "Kawai", "GL-10", true, 1),
+                new Piano(4000, "Concert Grand", "Bösendorfer", "280VC", true, 1),
         };
         catalog.Add(pianoSection);
         List<InstrumentItem> trumpetSection = new List<InstrumentItem>
@@ -54,6 +54,7 @@ public class Program
         };
         catalog.Add(drumSection);
 
+        List<IRent> RentedItems = new List<IRent>();
         var running = true;
         while (running)
         {
@@ -64,40 +65,99 @@ public class Program
                 case 1: AddItem(catalog); break;
                 case 2: ListItems(catalog); break;
                 case 3: SellItem(catalog); break;
-                case 4: RentItem(catalog); break;
+                case 4: Renting(catalog,RentedItems); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
 
     }
-    private static void RentItem(List<List<InstrumentItem>> catalog)
+    private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
     {
-        Console.WriteLine("Enter the ID of the item you want to rent:");
-        int id = int.Parse(Console.ReadLine());
-        foreach (var section in catalog)
+        var running = true;
+        while (running)
         {
-            var item = section.FirstOrDefault(i => i.Id == id);
-            if (item != null)
-            {
-                if (item is IRent rentableItem)
+            
+        Console.WriteLine("1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
+        int choice = int.Parse(Console.ReadLine());
+        switch (choice)       {
+            case 1:
+                Console.WriteLine("Listing rentable items...\n\n");
+                foreach (var section in catalog)
                 {
-                    rentableItem.Rent();
-                    return;
+                    foreach (var item in section)
+                    {
+                        if (item is IRent rentableItem)
+                        {
+                            Console.WriteLine(item.Describe());
+                        }
+                    }
                 }
-                else
+                Console.WriteLine("\n");
+            break;
+            case 2: 
+                Console.WriteLine("Listing rented items...\n\n");
+                foreach (var item in rentedItem)
                 {
-                    Console.WriteLine($"Sorry, the item with ID {id} is not available for rent.");
-                    return;
+                    Console.WriteLine(item);
                 }
-            }
+                Console.WriteLine("\n");
+            break;
+            case 3: 
+                Console.WriteLine("Enter the ID of the item you want to rent:");
+                int id = int.Parse(Console.ReadLine());
+                foreach (var section in catalog)
+                {
+                    var item = section.FirstOrDefault(i => i.Id == id);
+                    if (item != null)
+                    {
+                        if (item is IRent rentableItem)
+                        {
+                            rentableItem.Rent();
+                            rentedItem.Add(rentableItem);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Sorry, the item with ID {id} is not available for rent.");
+                            return;
+                        }
+                    }
+                }
+                Console.WriteLine($"Sorry, no item with ID {id} was found.");
+            break;
+            case 4: 
+                Console.WriteLine("Enter the ID of the item you want to return:");
+                int returnId = int.Parse(Console.ReadLine());
+                foreach (var section in catalog)
+                {
+                    var item = section.FirstOrDefault(i => i.Id == returnId);
+                    if (item != null)
+                    {
+                        if (item is IRent rentableItem)
+                        {
+                            rentableItem.Return();
+                            rentedItem.Remove(rentableItem);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Sorry, the item with ID {returnId} is not available for return.");
+                            return;
+                        }
+                    }
+                }
+                Console.WriteLine($"Sorry, no item with ID {returnId} was found.");
+            break;
+            case 0: 
+            running = false;
+            return;
         }
-        Console.WriteLine($"Sorry, no item with ID {id} was found.");
+        }
+       
     }
 
     private static void PrintMenu()
     {
         Console.WriteLine("=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. List items\n3. Sell item\n4. Rent item\n0. Exit\n");
+        Console.WriteLine("1. Add item\n2. List items\n3. Sell item\n4. Renting Service\n0. Exit\n");
     }
     private static void SellItem(List<List<InstrumentItem>> catalog)
     {
@@ -106,7 +166,7 @@ public class Program
         foreach (var section in catalog)
         {
             var item = section.FirstOrDefault(i => i.Id == id);
-            if (item != null)
+            if (item != null && item is not IRent rentableItem)  
             {
                 section.Remove(item);
                 Console.WriteLine($"You have sold {item.Brand} {item.Model}.");
@@ -235,8 +295,10 @@ public class Program
         string model = Console.ReadLine();
         Console.WriteLine("Enter amount available:");
         int amountAvailable = int.Parse(Console.ReadLine());
-        
-        var piano = new Piano(price, type, brand, model, amountAvailable);
+        Console.WriteLine("Is it available for rent? (y/n)");
+        bool canRent = Console.ReadLine().ToLower() == "y";
+
+        var piano = new Piano(price, type, brand, model, canRent, amountAvailable);
         catalog[4].Add(piano); 
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.");
     }
