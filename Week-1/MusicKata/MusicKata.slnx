@@ -1,1 +1,4 @@
-<Solution />
+<Solution>
+  <Project Path="Music.Domain/Music.Domain.csproj" />
+  <Project Path="MusicKata.App/MusicKata.App.csproj" />
+</Solution>
