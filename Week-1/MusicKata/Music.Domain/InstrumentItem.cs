@@ -9,13 +9,15 @@ public abstract class InstrumentItem
     public string? Model { get; private set; }
 
     public string? Brand { get; private set; }
+    public int AmountAvailable { get; set; }
 
-    protected InstrumentItem(int price, string brand, string model)
+    protected InstrumentItem(int price, string brand, string model, int amountAvailable)
     {
         Id = _nextId++;
         Price = price;
         Brand = brand;
         Model = model;
+        AmountAvailable = amountAvailable;
     }
 
     public abstract string Describe();

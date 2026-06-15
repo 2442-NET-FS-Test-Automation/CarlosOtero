@@ -3,15 +3,13 @@ namespace MusicKata.Domain;
 public class Piano : InstrumentItem, IRent
 {
     public string Type { get; set; }
-    public int AmountAvailable { get; private set; }
     
     public bool CanRent { get; set; }
 
 
-    public Piano(int price, string type, string brand, string model, bool canRent, int amountAvailable) : base(price, brand, model)
+    public Piano(int price, string type, string brand, string model, bool canRent, int amountAvailable) : base(price, brand, model, amountAvailable)
     {
         Type = type;
-        AmountAvailable = amountAvailable;
         CanRent = canRent;
     }
     public bool Rent()
@@ -29,6 +27,8 @@ public class Piano : InstrumentItem, IRent
         }
     }
     public void Return() => AmountAvailable++;
+
+    public void IsRented()=> AmountAvailable--;
     public override string Describe()
     {
         return $"{Id}: {Brand} {Model} {Type} piano. Price: ${Price}.";

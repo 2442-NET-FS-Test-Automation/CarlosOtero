@@ -38,6 +38,9 @@ public class Guitar : InstrumentItem, IRent
         }
     }
 
+    public void IsRented()=> AmountAvailable--;
+
+
     public void Return() => AmountAvailable++;
 
 }

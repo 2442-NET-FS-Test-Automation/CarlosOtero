@@ -63,9 +63,10 @@ public class Program
             switch (choice)
             {
                 case 1: AddItem(catalog); break;
-                case 2: ListItems(catalog); break;
-                case 3: SellItem(catalog); break;
-                case 4: Renting(catalog,RentedItems); break;
+                case 2: RemoveItem(catalog); break;
+                case 3: ListItems(catalog); break;
+                case 4: SellItem(catalog); break;
+                case 5: Renting(catalog,RentedItems); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
@@ -114,6 +115,7 @@ public class Program
                         {
                             rentableItem.Rent();
                             rentedItem.Add(rentableItem);
+                            rentableItem.IsRented();
                         }
                         else
                         {
@@ -157,8 +159,22 @@ public class Program
     private static void PrintMenu()
     {
         Console.WriteLine("=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. List items\n3. Sell item\n4. Renting Service\n0. Exit\n");
+        Console.WriteLine("1. Add item\n2. Remove items\n3. List items\n4. Sell item\n5. Renting Service\n0. Exit\n");
     }
+
+    private static void RemoveItem(List<List<InstrumentItem>> catalog)
+    {
+        Console.WriteLine("Enter the ID of the item you want to sell:");
+        int id = int.Parse(Console.ReadLine());
+        foreach (var section in catalog)
+        {
+            var item = section.FirstOrDefault(i => i.Id == id);
+            if (item != null)  
+                section.Remove(item);
+        }
+        Console.WriteLine($"You have removed item with ID {id}.");
+    }
+    
     private static void SellItem(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter the ID of the item you want to sell:");
@@ -166,12 +182,8 @@ public class Program
         foreach (var section in catalog)
         {
             var item = section.FirstOrDefault(i => i.Id == id);
-            if (item != null && item is not IRent rentableItem)  
-            {
-                section.Remove(item);
-                Console.WriteLine($"You have sold {item.Brand} {item.Model}.");
-                return;
-            }
+            if (item != null)  
+                item.AmountAvailable--;
         }
         Console.WriteLine($"You have sold item with ID {id}.");
     }

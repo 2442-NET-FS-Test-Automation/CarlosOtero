@@ -9,4 +9,6 @@ public interface IRent
     void Return();
 
     bool CanRent { get; set; }
+
+    void IsRented ();
 }
