@@ -16,7 +16,6 @@ public class Piano : InstrumentItem, IRent
     {
         if (CanRent && AmountAvailable > 0)
         {
-            AmountAvailable--;
             Console.WriteLine($"You have rented a {Brand} {Model} piano.");
             return true;
         }
@@ -31,6 +30,6 @@ public class Piano : InstrumentItem, IRent
     public void IsRented()=> AmountAvailable--;
     public override string Describe()
     {
-        return $"{Id}: {Brand} {Model} {Type} piano. Price: ${Price}.";
+        return $"{Id}: {Brand} {Model} {Type} piano. Available: {AmountAvailable}. Price: ${Price}.";
     }
 }

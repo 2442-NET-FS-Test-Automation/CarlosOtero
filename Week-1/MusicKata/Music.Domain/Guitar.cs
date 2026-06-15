@@ -17,14 +17,13 @@ public class Guitar : InstrumentItem, IRent
 
     public override string Describe()
     {
-        return $"{Id}: {Brand} {Model} {Type} guitar with {NumberOfStrings} strings. Price: ${Price}.";  
+        return $"{Id}: {Brand} {Model} {Type} guitar with {NumberOfStrings} strings. Available: {AmountAvailable}. Price: ${Price}.";  
     }
 
     public bool Rent()
     {
         if (CanRent && AmountAvailable > 0)
         {
-            AmountAvailable--;
             CanRent = false;
             Console.WriteLine($"You have rented a {Brand} {Model} guitar.");
             return true;

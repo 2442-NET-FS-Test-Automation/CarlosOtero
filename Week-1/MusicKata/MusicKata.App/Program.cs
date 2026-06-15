@@ -59,7 +59,7 @@ public class Program
         while (running)
         {
             PrintMenu();
-            int choice = int.Parse(Console.ReadLine());   // naive: may throw on bad input — fine for now
+            int choice = int.Parse(Console.ReadLine()?? "");   // naive: may throw on bad input — fine for now
             switch (choice)
             {
                 case 1: AddItem(catalog); break;
@@ -72,43 +72,53 @@ public class Program
         }
 
     }
+
+    private static void PrintRented(List<IRent> rentedItem)
+    {
+        Console.WriteLine("\nListing rented items...\n\n");
+        foreach (var item in rentedItem)
+            {
+                Console.WriteLine(item);
+            }
+        Console.WriteLine("\n");
+    }
+    private static void PrintRentables(List<List<InstrumentItem>> catalog)
+    {
+        Console.WriteLine("\nListing rentable items...\n\n");
+                foreach (var section in catalog)
+                {
+                    foreach (var item in section)
+                    {
+                        if (item is IRent rentableItem && rentableItem.CanRent)
+                        {
+                            Console.WriteLine(item.Describe());
+                        }
+                    }
+                }
+        Console.WriteLine("\n");
+    }
     private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
     {
         var running = true;
         while (running)
         {
             
-        Console.WriteLine("1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
-        int choice = int.Parse(Console.ReadLine());
+        Console.WriteLine("\n==RENTING MANAGER==\n1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
+        int choice = int.Parse(Console.ReadLine()?? "");
         switch (choice)       {
             case 1:
-                Console.WriteLine("Listing rentable items...\n\n");
-                foreach (var section in catalog)
-                {
-                    foreach (var item in section)
-                    {
-                        if (item is IRent rentableItem)
-                        {
-                            Console.WriteLine(item.Describe());
-                        }
-                    }
-                }
-                Console.WriteLine("\n");
+                PrintRentables(catalog);
             break;
             case 2: 
-                Console.WriteLine("Listing rented items...\n\n");
-                foreach (var item in rentedItem)
-                {
-                    Console.WriteLine(item);
-                }
-                Console.WriteLine("\n");
+                PrintRented(rentedItem);
             break;
             case 3: 
-                Console.WriteLine("Enter the ID of the item you want to rent:");
-                int id = int.Parse(Console.ReadLine());
+                PrintRentables(catalog);
+                Console.WriteLine("Enter the item number you wish to rent:");
+                int rentNumber = int.Parse(Console.ReadLine()?? "");
                 foreach (var section in catalog)
                 {
-                    var item = section.FirstOrDefault(i => i.Id == id);
+                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
                     if (item != null)
                     {
                         if (item is IRent rentableItem)
@@ -116,37 +126,42 @@ public class Program
                             rentableItem.Rent();
                             rentedItem.Add(rentableItem);
                             rentableItem.IsRented();
+                            Console.WriteLine($"\nItem with ID {rentNumber} has been rented.\n");
+                            return;
                         }
                         else
                         {
-                            Console.WriteLine($"Sorry, the item with ID {id} is not available for rent.");
+                            Console.WriteLine($"\nSorry, the item with ID {rentNumber} is not available for rent.\n");
                             return;
                         }
                     }
+                    
                 }
-                Console.WriteLine($"Sorry, no item with ID {id} was found.");
+                Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
             break;
             case 4: 
-                Console.WriteLine("Enter the ID of the item you want to return:");
-                int returnId = int.Parse(Console.ReadLine());
+                PrintRented(rentedItem);
+                Console.WriteLine("Enter the item number you wish to return:\n");
+                rentNumber = int.Parse(Console.ReadLine()?? "");
                 foreach (var section in catalog)
                 {
-                    var item = section.FirstOrDefault(i => i.Id == returnId);
+                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
                     if (item != null)
                     {
                         if (item is IRent rentableItem)
                         {
                             rentableItem.Return();
                             rentedItem.Remove(rentableItem);
+                            Console.WriteLine($"\nThanks for returning item with ID {rentNumber}.\n");
+                            return;
                         }
                         else
-                        {
-                            Console.WriteLine($"Sorry, the item with ID {returnId} is not available for return.");
+                        {   
+                            Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
                             return;
                         }
                     }
                 }
-                Console.WriteLine($"Sorry, no item with ID {returnId} was found.");
             break;
             case 0: 
             running = false;
@@ -158,39 +173,44 @@ public class Program
 
     private static void PrintMenu()
     {
-        Console.WriteLine("=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. Remove items\n3. List items\n4. Sell item\n5. Renting Service\n0. Exit\n");
+        Console.WriteLine("\n=== Welcome to the Music Store Manager! Here are your options: ===\n");
+        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n0. Exit\n");
     }
 
     private static void RemoveItem(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter the ID of the item you want to sell:");
-        int id = int.Parse(Console.ReadLine());
+        int id = int.Parse(Console.ReadLine()?? "");
         foreach (var section in catalog)
         {
             var item = section.FirstOrDefault(i => i.Id == id);
             if (item != null)  
                 section.Remove(item);
         }
-        Console.WriteLine($"You have removed item with ID {id}.");
+        Console.WriteLine($"\nYou have removed item with ID {id}.\n");
     }
     
     private static void SellItem(List<List<InstrumentItem>> catalog)
     {
-        Console.WriteLine("Enter the ID of the item you want to sell:");
-        int id = int.Parse(Console.ReadLine());
+                Console.WriteLine("Enter the ID of the item you want to sell:");
+        int id = int.Parse(Console.ReadLine()?? "");
         foreach (var section in catalog)
         {
             var item = section.FirstOrDefault(i => i.Id == id);
-            if (item != null)  
+            if (item != null && item.AmountAvailable >= 1) 
                 item.AmountAvailable--;
+            if (item == null || item.AmountAvailable == 0){
+                Console.WriteLine($"\nI'm sorry, the item is not currently available.\n");
+                return;
+            }
+
         }
-        Console.WriteLine($"You have sold item with ID {id}.");
+        Console.WriteLine($"\nYou have sold item with ID {id}.");
     }
     private static void ListItems(List<List<InstrumentItem>> catalog)
     {
-        List<string> sectionNames = new List<string> { "Guitars", "Microphones", "Trumpets", "Drums", "Pianos" };
-        Console.WriteLine("Listing items...\n\n");
+        List<string> sectionNames = new List<string> { "Guitars", "Pianos", "Trumpets", "Microphone", "Drums" };
+        Console.WriteLine("\nListing items...\n\n");
         foreach (var section in catalog)
         {
             Console.WriteLine($"=== In {sectionNames[catalog.IndexOf(section)]} ===");
@@ -206,7 +226,7 @@ public class Program
     private static void AddItem(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("What type of item would you like to add?\n1. Guitar\n2. Microphone\n3. Trumpet\n4. Drum\n5. Piano");
-        int itemType =  int.Parse(Console.ReadLine());
+        int itemType =  int.Parse(Console.ReadLine()?? "");
         switch (itemType)
         {
             case 1: AddGuitar(catalog); break;
@@ -219,99 +239,100 @@ public class Program
     private static void AddGuitar(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine());
+        int price = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Enter type:");
-        string type = Console.ReadLine();
+        string type = Console.ReadLine()?? "";
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine();
+        string brand = Console.ReadLine()?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine();
+        string model = Console.ReadLine()?? "";
         Console.WriteLine("Enter number of strings:");
-        int numberOfStrings = int.Parse(Console.ReadLine());
+        int numberOfStrings = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Is it available for rent? (y/n)");
-        bool canRent = Console.ReadLine().ToLower() == "y";
+        bool canRent = (Console.ReadLine() ?? "").ToLower() == "y";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine());
+        int amountAvailable = int.Parse(Console.ReadLine()?? "");
 
         var guitar = new Guitar(price, type, brand, model, numberOfStrings, canRent, amountAvailable);
         catalog[0].Add(guitar); 
-        Console.WriteLine($"Added {guitar.Brand} {guitar.Model} guitar to the catalog.");
+        Console.WriteLine($"Added {guitar.Brand} {guitar.Model} guitar to the catalog.\n");
     }
     private static void AddMicrophone(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine());
+        int price = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine();
+        string brand = Console.ReadLine()?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine();
+        string model = Console.ReadLine()?? "";
         Console.WriteLine("Enter type:");
-        string type = Console.ReadLine();
+        string type = Console.ReadLine()?? "";
         Console.WriteLine("Is it wireless? (y/n)");
-        bool isWireless = Console.ReadLine().ToLower() == "y";
+        bool isWireless = (Console.ReadLine() ?? "").ToLower() == "y";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine());
+        int amountAvailable = int.Parse(Console.ReadLine()?? "");
 
         var microphone = new Microphone(price, brand, model, type, isWireless, amountAvailable);
         catalog[1].Add(microphone); 
-        Console.WriteLine($"Added {microphone.Brand} {microphone.Model} microphone to the catalog.");
+        Console.WriteLine($"Added {microphone.Brand} {microphone.Model} microphone to the catalog.\n");
     }
 
     private static void AddTrumpet(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine());
+        int price = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine();
+        string brand = Console.ReadLine()?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine();
+        string model = Console.ReadLine()?? "";
         Console.WriteLine("Enter size:");
-        string size = Console.ReadLine();
+        string size = Console.ReadLine()?? "";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine());
+        int amountAvailable = int.Parse(Console.ReadLine()?? "");
 
         var trumpet = new Trumpet(price, brand, model, size, amountAvailable);
         catalog[2].Add(trumpet); 
-        Console.WriteLine($"Added {trumpet.Brand} {trumpet.Model} trumpet to the catalog.");
+        Console.WriteLine($"Added {trumpet.Brand} {trumpet.Model} trumpet to the catalog.\n");
     }
 
     private static void AddDrum(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine());
+        int price = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine();
+        string brand = Console.ReadLine()?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine();
+        string model = Console.ReadLine()?? "";
         Console.WriteLine("Enter number of pieces:");
-        int numberOfPieces = int.Parse(Console.ReadLine());
+        int numberOfPieces = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine());
+        int amountAvailable = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Enter number of cymbals:");
-        int numberOfCymbals = int.Parse(Console.ReadLine());
+        int numberOfCymbals = int.Parse(Console.ReadLine()?? "");
 
         var drum = new Drum(price, brand, model, numberOfPieces, amountAvailable, numberOfCymbals);
         catalog[3].Add(drum); 
-        Console.WriteLine($"Added {drum.Brand} {drum.Model} drum set to the catalog.");
+        Console.WriteLine($"Added {drum.Brand} {drum.Model} drum set to the catalog.\n");
     }
 
     private static void AddPiano(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine());
+        int price = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Enter type:");
-        string type = Console.ReadLine();
+        string type = Console.ReadLine()?? "";
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine();
+        string brand = Console.ReadLine()?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine();
+        string model = Console.ReadLine()?? "";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine());
+        int amountAvailable = int.Parse(Console.ReadLine()?? "");
         Console.WriteLine("Is it available for rent? (y/n)");
-        bool canRent = Console.ReadLine().ToLower() == "y";
+        bool canRent = (Console.ReadLine() ?? "").ToLower() == "y";
+
 
         var piano = new Piano(price, type, brand, model, canRent, amountAvailable);
         catalog[4].Add(piano); 
-        Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.");
+        Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
     }
 }

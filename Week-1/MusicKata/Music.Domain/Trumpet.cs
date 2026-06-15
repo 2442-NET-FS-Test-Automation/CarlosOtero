@@ -12,6 +12,6 @@ public class Trumpet : InstrumentItem
 
     override public string Describe()
     {
-        return $"{Id}: {Brand} {Model} {Size} trumpet. Price: ${Price}.";
+        return $"{Id}: {Brand} {Model} {Size} trumpet. Available: {AmountAvailable}. Price: ${Price}.";
     }
 }

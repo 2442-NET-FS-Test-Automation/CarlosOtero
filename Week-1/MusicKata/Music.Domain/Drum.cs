@@ -15,6 +15,6 @@ public class Drum : InstrumentItem
 
     public override string Describe()
     {
-        return $"{Id}: {Brand} {Model} drum set with {DrumAmount} drums and {PlateAmount} plates. Price: ${Price}.";
+        return $"{Id}: {Brand} {Model} drum set with {DrumAmount} drums and {PlateAmount} plates. Available: {AmountAvailable}. Price: ${Price}.";
     }
 }

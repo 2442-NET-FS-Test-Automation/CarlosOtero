@@ -15,6 +15,6 @@ public class Microphone : InstrumentItem
     public override string Describe()
     {
         string wirelessInfo = IsWireless ? "wireless" : "wired";
-        return $"{Id}: {Brand} {Model} {Type} ({wirelessInfo}) microphone. Price: ${Price}.";
+        return $"{Id}: {Brand} {Model} {Type} ({wirelessInfo}) microphone. Available: {AmountAvailable}. Price: ${Price}.";
     }
 }
