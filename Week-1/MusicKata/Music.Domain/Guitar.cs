@@ -7,9 +7,7 @@ public class Guitar : InstrumentItem, IRent
 
     public bool CanRent { get; set; }
 
-    public int AmountAvailable { get; private set; }
-
-    public Guitar(int price, string type, string brand, string model, int numberOfStrings, bool canRent, int amountAvailable) : base(price, brand, model)
+    public Guitar(int price, string type, string brand, string model, int numberOfStrings, bool canRent, int amountAvailable) : base(price, brand, model,amountAvailable)
     {
         Type = type;
         NumberOfStrings = numberOfStrings;

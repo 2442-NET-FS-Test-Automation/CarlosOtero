@@ -4,10 +4,9 @@ public class Drum : InstrumentItem
 {
     public int DrumAmount { get; set; }
     public int PlateAmount { get; set; }
-    public int AmountAvailable { get; private set; }
 
 
-    public Drum(int price, string brand, string model, int drumAmount, int plateAmount, int amountAvailable) : base(price, brand, model)
+    public Drum(int price, string brand, string model, int drumAmount, int plateAmount, int amountAvailable) : base(price, brand, model, amountAvailable)
     {
         DrumAmount = drumAmount;
         PlateAmount = plateAmount;

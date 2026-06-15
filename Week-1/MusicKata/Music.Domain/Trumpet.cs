@@ -3,9 +3,8 @@ namespace MusicKata.Domain;
 public class Trumpet : InstrumentItem
 {
     public string Size { get; set; }
-    public int AmountAvailable { get; private set; }
 
-    public Trumpet(int price, string brand, string model, string size, int amountAvailable) : base(price, brand, model)
+    public Trumpet(int price, string brand, string model, string size, int amountAvailable) : base(price, brand, model,amountAvailable)
     {
         Size = size;
         AmountAvailable = amountAvailable;

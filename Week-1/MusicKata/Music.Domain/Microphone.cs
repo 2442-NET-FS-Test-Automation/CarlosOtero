@@ -4,9 +4,8 @@ public class Microphone : InstrumentItem
 {
     public string Type { get; set; }
     public bool IsWireless { get; set; }
-    public int AmountAvailable { get; private set; }
 
-    public Microphone(int price, string brand, string model, string type, bool isWireless, int amountAvailable) : base(price, brand, model)
+    public Microphone(int price, string brand, string model, string type, bool isWireless, int amountAvailable) : base(price, brand, model,amountAvailable)
     {
         Type = type;
         IsWireless = isWireless;
