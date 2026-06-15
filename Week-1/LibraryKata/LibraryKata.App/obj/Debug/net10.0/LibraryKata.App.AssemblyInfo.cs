@@ -13,7 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LibraryKata.App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+<<<<<<< Updated upstream
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6a6299e27f7de37c1a8ba5194a67a8d48a368981")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+83bda9c36efdc36051eb8b83ea0ee02b67c1b79f")]
+>>>>>>> Stashed changes
 [assembly: System.Reflection.AssemblyProductAttribute("LibraryKata.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LibraryKata.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

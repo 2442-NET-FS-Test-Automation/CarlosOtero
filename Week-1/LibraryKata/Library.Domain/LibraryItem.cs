@@ -4,6 +4,7 @@ namespace LibraryKata.Domain;
 //to call their parent's constructor - but WE can't call it via new
 public abstract class LibraryItem
 {
+    //Things about a book we can model - what is the "shape" of a book, because I want to use a no-arg Constructor, its best practice to make my properties nullable
     public string? Title {get; private set;} //auto property syntax - no writing setters and getters
     public string? Author {get; private set;}
     private static int _nextId = 1; // By convention, static properties have an underscore 

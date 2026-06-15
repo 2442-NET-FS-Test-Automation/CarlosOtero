@@ -21,6 +21,7 @@ public class Program
         DataTypesAndOperators();
         ClassesExample();
         OopDemo();
+        CollectionsDemo();
     }
 
     private static void DataTypesAndOperators() //If I had arguments, or inputs for this method, they would go inside the parenthesis after the method name.
@@ -200,6 +201,54 @@ public class Program
 
     }
 
+    //Collections demo stuff
+    private static void CollectionsDemo()
+    {
+        Console.WriteLine("=== COLLECTIONS DEMO STUFF ===");
+
+        //Creating a catalog object
+        //Because this is backed by a list, it grows and shrinks for us
+        Catalog catalog = new();
+
+        //I could create my objects
+        Book dune = new ("Dune", "Frank Herbert", 3);
+
+        //then add them
+        catalog._items.Add(dune);
+
+        //I can also just call a constructor inside the Add() method call
+        //Methods having their arguments satissfied by the return of the other methods is a common pattern
+        //and sometimes you0ll get like 4-5 callbacks deep in tools like ASP.NET
+
+        catalog._items.Add(new ReferenceBook("C# Language specs", "Microsoft", "Technology"));
+        catalog._items.Add(new Magazine("Nat Geo", "Charlie", 4, "Conde Naste"));
+
+        Console.WriteLine($"Catalog holds {catalog._items.Count}; first is {catalog._items[0].Title}");
+
+        //Enum + Struct use
+        ItemKind kind = ItemKind.Magazine; //Example of selecting an enum value
+        ShelfLocation location = new (3,12); //Struct - looks a lot like a class, but it is a VALUE type (AISLE 3, SHELF 12)
+
+        Console.WriteLine($"{kind} sits at {location}");
+
+        Book duneCopy = dune; //Copies the reference
+        //Let's say I modify duneCopy, what happens to the data in dune?
+        //All we copies was the pointer - these two are not independent
+
+        ShelfLocation location2 = location; //Copies the data/fields
+        //These are not linked in the same way, I can edit the data in one without touching the other
+
+        //Generics: Our own Shelf<T> that can hold anything - though technically all the collections
+        // we used thus far have been generic classes themselves
+
+        Shelf<LibraryItem> shelf = new Shelf<LibraryItem>(10);
+        Shelf<int> intShelf = new Shelf<int>(200);
+
+        shelf.TryAdd(catalog._items[0]);
+        shelf.TryAdd(catalog._items[1]);
+
+        Console.WriteLine($"Trying to add a third thing in our catalog: {shelf.TryAdd(catalog._items[2])}");
+    }
 }
 
 
@@ -207,3 +256,11 @@ public class Program
 //Concrete & Abstract classes
 // A concrete class is a class that can be instantiated directly.
 // An abstract class is a class that cannot be instantiated directly and is meant to be inherited by other classes.
+
+
+
+//Collections
+//Lists "List<type>": Their behaviour consists of growing dynamically, ordered, typed, index access.
+//Stack "Stack<type>": Allows me to Push and Pop, Last-in/First-out
+//Queue "Queue<type>": Allows me to Enqueue and Dequeue, First-in/First-out
+//Linked Lists "LinkedList<type>": Allows me to insert anywhere and reorder but is slightly heavier 
