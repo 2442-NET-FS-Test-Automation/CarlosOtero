@@ -1,7 +1,7 @@
 ﻿//If I have code from another namespace I want to use here - I use a using statement
-
-using Library.Domain;
+using Library.Kata.Domain;
 using LibraryKata.Domain;
+using Serilog;
 
 namespace LibraryKata.App; // A namespace is like a bucket or logical container for different related code files.
 
@@ -15,13 +15,29 @@ public class Program
     //void - it doesn't return anything
     public static void Main()
     {
+        // Let's configure Serilog here before any code execution
+        // Serilog works via a singleton object. It's shared globally
+        //Throughout the app, configure once use anywhere.
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information() // Verbose > Debug > Info > Warning > Error > Fatal
+            .WriteTo.Console() //Sink: Where do my logs go? Console, text file, database, etc?
+            .CreateLogger(); //Create logger based on the config above
+
+
         // When I call dotnet run, it finds Main() and begins code execution at the first line of the main method.
         // I wrote my code, inside DataTypesAndOperatirs() - a separate method. So if I want
         //that code to run, I need to call it inside Main()
         DataTypesAndOperators();
+        //Wired in: These were deined but never called from Main, so the control-flow,
+        //loops, and arrays demos never actually ran. Call them in source order.
         ClassesExample();
         OopDemo();
         CollectionsDemo();
+        ExceptionsDemo();
+        //In case there are any lingering logs by the time we hit line 37 above
+        //Don't just stop execution, write the logs to their sink THEN close the program
+        Log.CloseAndFlush();
+
     }
 
     private static void DataTypesAndOperators() //If I had arguments, or inputs for this method, they would go inside the parenthesis after the method name.
@@ -214,16 +230,16 @@ public class Program
         Book dune = new ("Dune", "Frank Herbert", 3);
 
         //then add them
-        catalog._items.Add(dune);
+        catalog.Add(dune);
 
         //I can also just call a constructor inside the Add() method call
         //Methods having their arguments satissfied by the return of the other methods is a common pattern
         //and sometimes you0ll get like 4-5 callbacks deep in tools like ASP.NET
 
-        catalog._items.Add(new ReferenceBook("C# Language specs", "Microsoft", "Technology"));
-        catalog._items.Add(new Magazine("Nat Geo", "Charlie", 4, "Conde Naste"));
+        catalog.Add(new ReferenceBook("C# Language specs", "Microsoft", "Technology"));
+        catalog.Add(new Magazine("Nat Geo", "Charlie", 4, "Conde Naste"));
 
-        Console.WriteLine($"Catalog holds {catalog._items.Count}; first is {catalog._items[0].Title}");
+        Console.WriteLine($"Catalog holds {catalog.Count}; first is {catalog[0].Title}");
 
         //Enum + Struct use
         ItemKind kind = ItemKind.Magazine; //Example of selecting an enum value
@@ -244,11 +260,87 @@ public class Program
         Shelf<LibraryItem> shelf = new Shelf<LibraryItem>(10);
         Shelf<int> intShelf = new Shelf<int>(200);
 
-        shelf.TryAdd(catalog._items[0]);
-        shelf.TryAdd(catalog._items[1]);
+        shelf.TryAdd(catalog[0]);
+        shelf.TryAdd(catalog[1]);
 
-        Console.WriteLine($"Trying to add a third thing in our catalog: {shelf.TryAdd(catalog._items[2])}");
+        Console.WriteLine($"Trying to add a third thing in our catalog: {shelf.TryAdd(catalog[2])}");
     }
+
+    public static void ExceptionsDemo()
+    {
+        Console.WriteLine("\n == Excptions, patterns, logging ==");
+        //By using liskov substitution from SOLID, if I later swap to a SQLLibraryRepo or whatever, this is
+        // the only line I have to change
+        ILibraryRepository repo = new InMemoryLibraryRepository();
+
+        //Injection our existing repo object to satisfy LibraryUnitOfWork's dependency
+        IUnitOfWork libraryWork = new LibraryUnitOfWork(repo);
+
+        //Create a book, but using our factory method
+        LibraryItem dune = LibraryItemFactory.Create(ItemKind.Book, "Dune", "Frank Herbert", copies: 3);
+
+        repo.Add(dune);
+        //Magazines need a publisher, but we provided a default values for the publisher argument in Create
+        //Let's see if it works
+        repo.Add(LibraryItemFactory.Create(ItemKind.Magazine, "Wired", "Axel", copies: 2));
+
+        //Pretend we are commiting changes to a DB or something.
+        libraryWork.Stage("Added 2 items");
+        libraryWork.Commit();
+
+        //We went through the trouble of creating custom exceptions
+        //Let's actually see them work for us. If you have code that can potentially fail
+        //wrap it in a try-catch (optional finally)
+        try
+        {
+            //Potentially offending code goes here
+            LibraryItem missing = repo.GetById(99);
+            Console.WriteLine(missing.Describe()); //We won't hit this I believe
+        }
+        catch (ItermNotFoundException ex)
+        {
+            //Your code can potentially throw more than one exception type. Handle them from most -> least specific
+            //We stored the offending id on the exception itself, here we can ask for it logging
+            Log.Error("Lookup failed for id {Id}: {Message}", ex.Id, ex.Message);
+        }
+        catch (LibraryException ex)
+        {
+            Log.Error("Library Error: {Message}", ex.Message);
+        }
+           catch (Exception ex)
+        {
+            Log.Error("Non Library Error: {Message}", ex.Message);
+        }
+        finally //Optional but adding a finally block add code that runs whether an exception is caught or not.
+        {
+            //Code in a finally block will run even if the try ends in a return
+            //Useful for DB operations wher you want to cleanup but you found the objecto to return
+            Console.WriteLine("Hit our finally block - lookup attempt done");
+        }
+
+        Book noCopies = new Book ("Count of Montecristo", "Alejandro Dumas", 0);
+
+        try
+        {
+            Borrow(noCopies);
+        }
+        catch (ItemNotAvailableException ex)
+        {
+            Log.Warning("Borrow refused: {Message}", ex.Message);
+        }
+
+    }
+
+    public static void Borrow (Book book)
+    {
+        //We can use the Checkout (boolean return) method from the book object
+        //in an if or something
+        if (!book.Checkout())
+        {
+            throw new ItemNotAvailableException(book.Title);
+        }
+    }
+
 }
 
 
