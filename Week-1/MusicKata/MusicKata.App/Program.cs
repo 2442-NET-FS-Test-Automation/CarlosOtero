@@ -55,6 +55,10 @@ public class Program
         catalog.Add(drumSection);
 
         List<IRent> RentedItems = new List<IRent>();
+        ITrackRepository trackRepo = new InMemoryTrackRepository();
+
+        Log.Information("Music Store Manager started with {TrackCount} seeded tracks", trackRepo.GetAll().Count);
+
         var running = true;
         while (running)
         {
@@ -67,10 +71,12 @@ public class Program
                 case 3: ListItems(catalog); break;
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
+                case 6: MixTapeCreator(trackRepo); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
 
+        Log.CloseAndFlush();
     }
 
     private static void PrintRented(List<IRent> rentedItem)
@@ -170,6 +176,8 @@ public class Program
         }
        
     }
+
+    
 
     private static void PrintMenu()
     {
