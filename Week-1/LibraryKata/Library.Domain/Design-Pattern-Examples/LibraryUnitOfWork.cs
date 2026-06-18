@@ -38,6 +38,5 @@ public class LibraryUnitOfWork : IUnitOfWork
     public void Stage(string change)
     {
         _staged.Add(change); //staging a change
-        throw new NotImplementedException();
     }
 }

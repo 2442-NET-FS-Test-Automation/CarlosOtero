@@ -10,10 +10,15 @@ public class InMemoryLibraryRepository : ILibraryRepository
     //We are kind of forced to rely on a list. We will store info outside
     //of program execution - I promise
 
-    private readonly List<LibraryItem> _items = new();
+    private readonly Dictionary<int,LibraryItem> _items = new();
     public void Add(LibraryItem item)
     {
-        _items.Add(item);
+        //_items.Add(item);
+
+        //New dictionary add code
+        _items.Add(item.Id, item); //If we use this method - it DOES throw when we add a duplicate
+        //_items[item.Id] = item - Alternative dictionary adding syntax, add or overwrites (doesn't warn you)
+
         //We just added a new item - that's a significant event. Let's log it
         //Notice not using string interpolation - this uses Serilog's template string format
         Log.Information("Added {Title} - id: {id}", item.Title, item.Id);
@@ -23,15 +28,21 @@ public class InMemoryLibraryRepository : ILibraryRepository
     {
         //Don't want to accidentally pass a pointer to my real list
         //return a new copy of the list
-        return _items.ToList();
+        //return _items.ToList();
+
+        //Instead of refactoring to work with a dictionary for the return
+        //We can just ask for a list of all values in the dictionary
+        return _items.Values.ToList();
+
     }
 
     public LibraryItem GetById(int id)
     {
+        //OLD LIST BACKED METHOD FOR LOOKUP
         //In order to find an item in our collection with the given Id
         //We need to search for it. We could use something like LINQ
         //but that's its own lesson/day
-
+        /*
         foreach(LibraryItem item in _items)
         {
             //Loop through the list, check for an item with the given Id
@@ -41,6 +52,18 @@ public class InMemoryLibraryRepository : ILibraryRepository
                 return item;
             }
         }
+        */
+
+        //New dictionary backed lookup code
+        //TryGetValue uses an out parameter. We pass it some value to do key based lookup
+        //We also neet to use the out keyword, and give a type and variable name for the second return
+        //? - means that this might be null (if we don't find anything)
+        //*In dictionaries, value can be anything and repeated
+        if (_items.TryGetValue(id, out LibraryItem? item)) //Using an out parameter to get a second return value
+        {
+            return item;
+        }
+
         //If we make it here - we exited the foreach without finding an item for that id
         Log.Warning("Lookup failed for id {Id}",id);
         throw new ItermNotFoundException(id); //throwing our custom exception with offending id
@@ -48,6 +71,7 @@ public class InMemoryLibraryRepository : ILibraryRepository
 
     public bool Remove(int id)
     {
+        /*
         foreach(LibraryItem item in _items)
         {
             if(item.Id == id)
@@ -56,6 +80,15 @@ public class InMemoryLibraryRepository : ILibraryRepository
                 Log.Information("Removed item with id {Id}", id); //Log the removal
                 return true;
             }
+        }
+        Log.Information("Removal failed for item with id {Id}", id);
+        return false;
+        */
+
+        if (_items.Remove(id)) // .Remove() - Returns a true and removes the item if found, returns false otherwise
+        {
+            Log.Information("Removed item with id {Id}", id); //Log the removal
+            return true;
         }
         Log.Information("Removal failed for item with id {Id}", id);
         return false;
