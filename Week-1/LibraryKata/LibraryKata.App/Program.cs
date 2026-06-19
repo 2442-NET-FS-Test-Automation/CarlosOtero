@@ -1,4 +1,5 @@
 ﻿//If I have code from another namespace I want to use here - I use a using statement
+using LabraryKata.Domain;
 using Library.Kata.Domain;
 using LibraryKata.Domain;
 using Serilog;
@@ -13,7 +14,7 @@ public class Program
     //public - accesible across the program
     //static - Main can be called upon without a Program object. It is a static/class method.
     //void - it doesn't return anything
-    public static void Main()
+    public static async Task Main()
     {
         // Let's configure Serilog here before any code execution
         // Serilog works via a singleton object. It's shared globally
@@ -34,6 +35,8 @@ public class Program
         OopDemo();
         CollectionsDemo();
         ExceptionsDemo();
+        AdvancedClassesDemo();
+        await AsyncHttpDemo();
         //In case there are any lingering logs by the time we hit line 37 above
         //Don't just stop execution, write the logs to their sink THEN close the program
         Log.CloseAndFlush();
@@ -268,7 +271,7 @@ public class Program
 
     public static void ExceptionsDemo()
     {
-        Console.WriteLine("\n == Excptions, patterns, logging ==");
+        Console.WriteLine("\n == Exceptions, patterns, logging ==");
         //By using liskov substitution from SOLID, if I later swap to a SQLLibraryRepo or whatever, this is
         // the only line I have to change
         ILibraryRepository repo = new InMemoryLibraryRepository();
@@ -339,6 +342,110 @@ public class Program
         {
             throw new ItemNotAvailableException(book.Title);
         }
+    }
+
+    public static void AdvancedClassesDemo()
+    {
+        Console.WriteLine("\n == Advanced classes ==");
+        //First, a quick detour, let's interact with the garbage collector
+        Console.WriteLine(GC.GetTotalMemory(forceFullCollection:false)/1024);
+
+        ILibraryRepository repo = new InMemoryLibraryRepository();
+
+        LibraryItem dune = LibraryItemFactory.Create(ItemKind.Book, "Dune", "Frank Herbert", copies: 3);
+        repo.Add(dune);
+
+        repo.Add(LibraryItemFactory.Create(ItemKind.Magazine, "Wired", "Axel", copies: 2));
+        repo.Add(LibraryItemFactory.Create(ItemKind.Book, "Dune Messiah", "Frank Herbert", copies: 3));
+        repo.Add(LibraryItemFactory.Create(ItemKind.ReferenceBook, "C# Language Reference", "Microsoft", 1, section: "3"));
+
+        Catalog catalog = new();
+        foreach (LibraryItem item in repo.GetAll())
+        {
+            catalog.Add(item);
+        }
+
+        Console.WriteLine($"We have {catalog.Authors.Count} unique authors in our catalog");
+
+        foreach(string author in catalog.Authors)
+        {
+            Console.WriteLine(author);
+        }
+        //Let's search our catalog now that it's backed by a dictionary
+        //Let's use our Find() method
+        List<LibraryItem> byFrankHerbert = catalog.Find(item => item.Author == "Frank Herbert");
+        Console.WriteLine($"There are {byFrankHerbert.Count} books by Frank Herbert");
+
+        //Let's see how many items in the catalog re Lendable
+        Console.WriteLine("We have a mix of lendable and non-lendable items");
+
+        foreach(LibraryItem item in catalog.Lendable())
+        {
+            Console.WriteLine($"{item.Title}");
+        }
+
+    }
+
+    public static async Task AsyncHttpDemo()
+    {
+        //We wrote our client object so let's use it
+        OpenLibraryClient client = new();
+
+        //Array to hold some isbn's
+        string[] isbns = { "9780132350884", "9780201633610"};
+
+        //I want to fetch the data from the Openlibrary for both ISBNs
+        //I do not want to sit here and type the same code calling the same method for both ISBNs
+        //I would end up awaiting two almost identical calls - that's valid bit the curricula says "optimizing async code"
+
+        Task<LibraryItem?>[] fetchedBooks = new Task<LibraryItem?>[isbns.Length];
+
+        //Next we loop through the array and call FetchByIdAsync - we use a traditional C-syntax for-Loop
+        //because we care about indexes for this
+        for(int i = 0; i < isbns.Length; i++)
+        {
+            //Notice, this is an async method call - but we didn't await it.
+            fetchedBooks[i] = client.FetchByIsbnAsync(isbns[i]);
+        }
+
+        //If we ONLY wannted ONE book, and we just had one isbn, we could do something like the following:
+        //foundbook = await client.FetchByIsbnAsync("1234564945644");
+
+
+        //In between starting the request in line 407, and the Task.WhenAll() call, I can do other stuff. I can call other methods
+        //I can acces other systems, etc.
+
+        LibraryItem?[] foundBooks = await Task.WhenAll(fetchedBooks);
+
+        //this works, but what if there's nothing there?
+        //LibraryItem? firstBookFound = foundBooks[0]:
+
+        //To be safe, we can use a quick ternary operator. Like a quick if-else check
+        //Ternary syntax (Some condition to check) ? trueValue : falseValue
+        LibraryItem? firstBookFound = foundBooks.Length > 0 ? foundBooks[0] : null;
+
+        //Using WhenAll to do concurrent fetching. If we didn't do this, and we awaited EVERY SINGLE call one by one
+        //Think about the amount of latency we'd be eating.
+        Console.WriteLine($"Fetched: {firstBookFound?.Describe() ?? "nothing"}");
+
+        //Boxing and unboxing - mostly deprecated, replaced by generics
+        //Sometimes we needed to store value types on the heap, think of adding an int to a list. Before generics (List<T>)
+        //we had ArrayList to accomplish the same thing. Under the hood, an ArrayList couldn't accept value types.
+
+        //We have an int
+        int toBeBoxed = 6;
+
+        //We "box" it, by giving wrapping it in an object reference
+        //So now it's on the heap
+        object boxed = 5; //This boxing process is something like 15 - 20x slower than just assigning an int
+
+        //Later, say, when we read something from the ArrayList into an int variable
+        int unboxed = (int)boxed;
+
+        //How can we avoid this?
+        //DON'T USE OLD NON GENERIC COLLECTIONS
+        //List<T> is modern, uses generics, avoid box-unbox
+        //ArrayList - deprecated, slow, uses boxing and unboxing
     }
 
 }
