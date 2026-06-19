@@ -1,4 +1,5 @@
-﻿using MusicKata.Domain;
+﻿using System.Reflection.PortableExecutable;
+using MusicKata.Domain;
 
 namespace MusicKata.App;
 
@@ -53,6 +54,9 @@ public class Program
                 new Drum(2500, "Gretsch", "Renown", 6, 8, 5),
         };
         catalog.Add(drumSection);
+        Stack<InstrumentItem> UndoStack = new();
+        int UndoId_Temp = 0;
+        bool hasUndo = false;
 
         List<IRent> RentedItems = new List<IRent>();
         var running = true;
@@ -63,164 +67,22 @@ public class Program
             switch (choice)
             {
                 case 1: AddItem(catalog); break;
-                case 2: RemoveItem(catalog); break;
+                case 2: RemoveItem(catalog, hasUndo, UndoStack,UndoId_Temp); break;
                 case 3: ListItems(catalog); break;
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
+                case 6: MixtapeCreator(); break;
+                case 7: MusicRecords(); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
 
     }
 
-    private static void PrintRented(List<IRent> rentedItem)
-    {
-        Console.WriteLine("\nListing rented items...\n\n");
-        foreach (var item in rentedItem)
-            {
-                Console.WriteLine(item);
-            }
-        Console.WriteLine("\n");
-    }
-    private static void PrintRentables(List<List<InstrumentItem>> catalog)
-    {
-        Console.WriteLine("\nListing rentable items...\n\n");
-                foreach (var section in catalog)
-                {
-                    foreach (var item in section)
-                    {
-                        if (item is IRent rentableItem && rentableItem.CanRent)
-                        {
-                            Console.WriteLine(item.Describe());
-                        }
-                    }
-                }
-        Console.WriteLine("\n");
-    }
-    private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
-    {
-        var running = true;
-        while (running)
-        {
-            
-        Console.WriteLine("\n==RENTING MANAGER==\n1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
-        int choice = int.Parse(Console.ReadLine()?? "");
-        switch (choice)       {
-            case 1:
-                PrintRentables(catalog);
-            break;
-            case 2: 
-                PrintRented(rentedItem);
-            break;
-            case 3: 
-                PrintRentables(catalog);
-                Console.WriteLine("Enter the item number you wish to rent:");
-                int rentNumber = int.Parse(Console.ReadLine()?? "");
-                foreach (var section in catalog)
-                {
-                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
-                    if (item != null)
-                    {
-                        if (item is IRent rentableItem)
-                        {
-                            rentableItem.Rent();
-                            rentedItem.Add(rentableItem);
-                            rentableItem.IsRented();
-                            Console.WriteLine($"\nItem with ID {rentNumber} has been rented.\n");
-                            return;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"\nSorry, the item with ID {rentNumber} is not available for rent.\n");
-                            return;
-                        }
-                    }
-                    
-                }
-                Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
-            break;
-            case 4: 
-                PrintRented(rentedItem);
-                Console.WriteLine("Enter the item number you wish to return:\n");
-                rentNumber = int.Parse(Console.ReadLine()?? "");
-                foreach (var section in catalog)
-                {
-                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
-                    if (item != null)
-                    {
-                        if (item is IRent rentableItem)
-                        {
-                            rentableItem.Return();
-                            rentedItem.Remove(rentableItem);
-                            Console.WriteLine($"\nThanks for returning item with ID {rentNumber}.\n");
-                            return;
-                        }
-                        else
-                        {   
-                            Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
-                            return;
-                        }
-                    }
-                }
-            break;
-            case 0: 
-            running = false;
-            return;
-        }
-        }
-       
-    }
-
     private static void PrintMenu()
     {
         Console.WriteLine("\n=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n0. Exit\n");
-    }
-
-    private static void RemoveItem(List<List<InstrumentItem>> catalog)
-    {
-        Console.WriteLine("Enter the ID of the item you want to sell:");
-        int id = int.Parse(Console.ReadLine()?? "");
-        foreach (var section in catalog)
-        {
-            var item = section.FirstOrDefault(i => i.Id == id);
-            if (item != null)  
-                section.Remove(item);
-        }
-        Console.WriteLine($"\nYou have removed item with ID {id}.\n");
-    }
-    
-    private static void SellItem(List<List<InstrumentItem>> catalog)
-    {
-                Console.WriteLine("Enter the ID of the item you want to sell:");
-        int id = int.Parse(Console.ReadLine()?? "");
-        foreach (var section in catalog)
-        {
-            var item = section.FirstOrDefault(i => i.Id == id);
-            if (item != null && item.AmountAvailable >= 1) 
-                item.AmountAvailable--;
-            if (item == null || item.AmountAvailable == 0){
-                Console.WriteLine($"\nI'm sorry, the item is not currently available.\n");
-                return;
-            }
-
-        }
-        Console.WriteLine($"\nYou have sold item with ID {id}.");
-    }
-    private static void ListItems(List<List<InstrumentItem>> catalog)
-    {
-        List<string> sectionNames = new List<string> { "Guitars", "Pianos", "Trumpets", "Microphone", "Drums" };
-        Console.WriteLine("\nListing items...\n\n");
-        foreach (var section in catalog)
-        {
-            Console.WriteLine($"=== In {sectionNames[catalog.IndexOf(section)]} ===");
-            foreach (var item in section)
-            {
-                Console.WriteLine(item.Describe());
-            }
-            Console.WriteLine("\n");
-        }
-        Console.WriteLine("\n");
+        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n7. Music Records\n0. Exit\n");
     }
 
     private static void AddItem(List<List<InstrumentItem>> catalog)
@@ -236,6 +98,7 @@ public class Program
             case 5: AddPiano(catalog); break;
         }
     }
+
     private static void AddGuitar(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
@@ -257,6 +120,7 @@ public class Program
         catalog[0].Add(guitar); 
         Console.WriteLine($"Added {guitar.Brand} {guitar.Model} guitar to the catalog.\n");
     }
+
     private static void AddMicrophone(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
@@ -332,7 +196,231 @@ public class Program
 
 
         var piano = new Piano(price, type, brand, model, canRent, amountAvailable);
-        catalog[4].Add(piano); 
+        catalog[4].Add(piano);
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
+    }
+
+    private static void RemoveItem(List<List<InstrumentItem>> catalog, bool hasUndo, Stack<InstrumentItem> undoStack, int undoId_Temp)
+    {
+        var running = true;
+        while (running)
+        {
+            Console.WriteLine("1. Remove item");
+            if(hasUndo == true)
+                Console.WriteLine("2. Undo Removal");
+            Console.WriteLine("0. Exit");
+            int choice = int.Parse(Console.ReadLine()?? "");
+            switch ((choice,hasUndo))
+            {
+                case (1, _): 
+                    Console.WriteLine("Enter the ID of the item you want to sell:");
+                    int id = int.Parse(Console.ReadLine()?? "");
+                    foreach (var section in catalog)
+                    {
+                        var item = section.FirstOrDefault(i => i.Id == id);
+                        if (item != null)  
+                            undoStack.Push(item);
+                            undoId_Temp = id;
+                            section.Remove(item);
+                            hasUndo = true;
+                    }
+                    Console.WriteLine($"\nYou have removed item with ID {id}.\n");
+                break;
+                case (2, true): 
+                    Console.WriteLine("Reverting action...");
+                    var command = undoStack.Pop();
+                    Console.WriteLine($"The thing in command{command}");
+                    //catalog.Insert(command.Id,command);
+
+                    
+                break;
+                case (0, _): 
+                    running = false;
+                break;
+                    
+            }
+            
+        }
+    }
+    
+    private static void ListItems(List<List<InstrumentItem>> catalog)
+    {
+        List<string> sectionNames = new List<string> { "Guitars", "Pianos", "Trumpets", "Microphone", "Drums" };
+        var running = true;
+        while (running){
+        Console.WriteLine("1. ORDER BY Brand\n2. ORDER BY Price\n3. List all items");
+        int choice = int.Parse(Console.ReadLine()?? "");   // naive: may throw on bad input — fine for now
+            switch (choice)
+            {
+                case 1:
+                    Console.WriteLine("\nListing items...\n\n");
+                    foreach (var section in catalog)
+                    {
+                        foreach (var item in section)
+                        {
+                            Console.WriteLine(item.Describe());
+                        }
+                        Console.WriteLine("\n");
+                    }
+                    Console.WriteLine("\n");
+                break;
+                case 2:
+                   Console.WriteLine("\nListing items...\n\n");
+                    foreach (var section in catalog)
+                    {
+                        Console.WriteLine($"=== In {sectionNames[catalog.IndexOf(section)]} ===");
+                        foreach (var item in section)
+                        {
+                            Console.WriteLine(item.Describe());
+                        }
+                        Console.WriteLine("\n");
+                    }
+                    Console.WriteLine("\n");
+                break;
+                case 3:
+                    Console.WriteLine("\nListing items...\n\n");
+                    foreach (var section in catalog)
+                    {
+                        Console.WriteLine($"=== In {sectionNames[catalog.IndexOf(section)]} ===");
+                        foreach (var item in section)
+                        {
+                            Console.WriteLine(item.Describe());
+                        }
+                        Console.WriteLine("\n");
+                    }
+                    Console.WriteLine("\n");
+                break;
+                case 0:
+                running = false;
+                break;
+        }
+        }
+    }
+
+    private static void SellItem(List<List<InstrumentItem>> catalog)
+    {
+                Console.WriteLine("Enter the ID of the item you want to sell:");
+        int id = int.Parse(Console.ReadLine()?? "");
+        foreach (var section in catalog)
+        {
+            var item = section.FirstOrDefault(i => i.Id == id);
+            if (item != null && item.AmountAvailable >= 1) 
+                item.AmountAvailable--;
+            if (item == null || item.AmountAvailable == 0){
+                Console.WriteLine($"\nI'm sorry, the item is not currently available.\n");
+                return;
+            }
+
+        }
+        Console.WriteLine($"\nYou have sold item with ID {id}.");
+    }
+
+    private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
+    {
+        var running = true;
+        while (running)
+        {
+            
+        Console.WriteLine("\n==RENTING MANAGER==\n1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
+        int choice = int.Parse(Console.ReadLine()?? "");
+        switch (choice)       {
+            case 1:
+                PrintRentables(catalog);
+            break;
+            case 2: 
+                PrintRented(rentedItem);
+            break;
+            case 3: 
+                PrintRentables(catalog);
+                Console.WriteLine("Enter the item number you wish to rent:");
+                int rentNumber = int.Parse(Console.ReadLine()?? "");
+                foreach (var section in catalog)
+                {
+                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
+                    if (item != null)
+                    {
+                        if (item is IRent rentableItem)
+                        {
+                            rentableItem.Rent();
+                            rentedItem.Add(rentableItem);
+                            rentableItem.IsRented();
+                            Console.WriteLine($"\nItem with ID {rentNumber} has been rented.\n");
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"\nSorry, the item with ID {rentNumber} is not available for rent.\n");
+                            return;
+                        }
+                    }
+                    
+                }
+                Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
+            break;
+            case 4: 
+                PrintRented(rentedItem);
+                Console.WriteLine("Enter the item number you wish to return:\n");
+                rentNumber = int.Parse(Console.ReadLine()?? "");
+                foreach (var section in catalog)
+                {
+                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
+                    if (item != null)
+                    {
+                        if (item is IRent rentableItem)
+                        {
+                            rentableItem.Return();
+                            rentedItem.Remove(rentableItem);
+                            Console.WriteLine($"\nThanks for returning item with ID {rentNumber}.\n");
+                            return;
+                        }
+                        else
+                        {   
+                            Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
+                            return;
+                        }
+                    }
+                }
+            break;
+            case 0: 
+            running = false;
+            return;
+        }
+        }
+       
+    }
+
+    private static void PrintRentables(List<List<InstrumentItem>> catalog)
+    {
+        Console.WriteLine("\nListing rentable items...\n\n");
+                foreach (var section in catalog)
+                {
+                    foreach (var item in section)
+                    {
+                        if (item is IRent rentableItem && rentableItem.CanRent)
+                        {
+                            Console.WriteLine(item.Describe());
+                        }
+                    }
+                }
+        Console.WriteLine("\n");
+    }
+
+    private static void PrintRented(List<IRent> rentedItem)
+    {
+        Console.WriteLine("\nListing rented items...\n\n");
+        foreach (var item in rentedItem)
+            {
+                Console.WriteLine(item);
+            }
+        Console.WriteLine("\n");
+    }
+
+    private static void MixtapeCreator()
+    {
+        throw new NotImplementedException();
+    }
+    private static void MusicRecords()
+    {
+        throw new NotImplementedException();
     }
 }
