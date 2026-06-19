@@ -276,7 +276,7 @@ public class Program
         var running = true;
         while (running){
         Console.WriteLine("1. ORDER BY Brand\n2. ORDER BY Price\n3. List all items\n0. Exit\n");
-        int choice = int.Parse(Console.ReadLine()?? "");   // naive: may throw on bad input — fine for now
+        int choice = int.Parse(Console.ReadLine()?? "");
             switch (choice)
             {
                 case 1:
@@ -294,6 +294,8 @@ public class Program
                     Console.WriteLine("\n");
                 break;
                 case 2:
+                Console.WriteLine("Insert a budget estimate\n");
+                int priceRange = int.Parse(Console.ReadLine()?? "");
                    Console.WriteLine("\nListing items...\n\n");
                     foreach (var section in catalog)
                     {
@@ -301,7 +303,8 @@ public class Program
                         var query = section.OrderBy(price => price.Price);
                         foreach (var item in query)
                         {
-                            Console.WriteLine(item.Describe());
+                            if(item.Price < priceRange)
+                                Console.WriteLine(item.Describe());
                         }
                         Console.WriteLine("\n");
                     }
