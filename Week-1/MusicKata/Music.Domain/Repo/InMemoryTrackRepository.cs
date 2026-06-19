@@ -48,13 +48,17 @@ public class InMemoryTrackRepository : ITrackRepository
 
     public Track? GetById(int id)
     {
-        foreach (Track track in _tracks)
+        if (ParseToDictionary(_tracks).TryGetValue(id, out Track? track))
         {
-            if (track.Id == id)
-                return track;
+            return track;
         }
 
         Log.Warning("Track lookup failed for id {Id}", id);
         return null;
+    }
+
+    public Dictionary<int, Track> ParseToDictionary(List<Track> tracks)
+    {
+        return tracks.ToDictionary(x => x.Id);
     }
 }

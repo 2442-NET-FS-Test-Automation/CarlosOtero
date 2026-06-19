@@ -79,6 +79,7 @@ public class Program
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
                 case 6: MixTapeCreator(trackRepo, mixTape); break;
+                case 7: MusicRecord(); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
@@ -285,7 +286,7 @@ public class Program
     private static void PrintMenu()
     {
         Console.WriteLine("\n=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n0. Exit\n");
+        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n7. Music Records\n0. Exit\n");
     }
 
     private static void RemoveItem(List<List<InstrumentItem>> catalog)
@@ -445,5 +446,74 @@ public class Program
         var piano = new Piano(price, type, brand, model, canRent, amountAvailable);
         catalog[4].Add(piano); 
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
+    }
+
+    /// <summary>
+    /// Display of Music Record menu.
+    /// </summary>
+    private const string MUSIC_RECORD_MENU =
+        """
+        1: Locate by name
+        2: Get music records information by key
+        3: List all (Artists, Genres) available
+        4: Go back
+        """;
+    
+    private const string MR_LIST_ATTRIBUTES =
+        """
+        1: List available artists
+        2: List available genres
+        3: Go back
+        """;
+
+    /// <summary>
+    /// Music Record menu logic.
+    /// </summary>
+    private static void MusicRecord()
+    {
+        Console.Clear();
+        Console.WriteLine(MUSIC_RECORD_MENU);
+        int? option = int.TryParse(Console.ReadLine(), out int result) ? result : null;
+        switch (option)
+        {
+            case 1:
+                LocateTrack();
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:
+            default:
+                return;
+        }
+
+
+    }
+
+    private static void LocateTrack()
+    {
+        try
+        {
+            Console.Clear();
+            InMemoryTrackRepository trackRepo = new();
+            Console.WriteLine("Enter Id of track.");
+            int? trackId = int.TryParse(Console.ReadLine(), out int result) ? result : null;
+
+            Track? track = trackId is not null ? trackRepo.GetById((int)trackId) : null;
+
+            if(track is not null)
+            {
+                track.PlaceTrack(track.CatalogSpot.Row, track.CatalogSpot.Col);
+                track.PrintLocation();
+                return;
+            }
+                Console.WriteLine("Track not found"); return;
+
+            
+        }catch(Exception ex)
+        {
+            Log.Warning("Something went wrong locating the track. {Message}", ex.Message);
+        }
     }
 }
