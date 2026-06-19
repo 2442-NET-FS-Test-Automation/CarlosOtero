@@ -62,6 +62,7 @@ public class Program
 
         List<IRent> RentedItems = new List<IRent>();
         ITrackRepository trackRepo = new InMemoryTrackRepository();
+        MixTapeQueue mixTape = new MixTapeQueue();
 
         Log.Information("Music Store Manager started with {TrackCount} seeded tracks", trackRepo.GetAll().Count);
 
@@ -77,7 +78,7 @@ public class Program
                 case 3: ListItems(catalog); break;
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
-                case 6: MixTapeCreator(trackRepo); break;
+                case 6: MixTapeCreator(trackRepo, mixTape); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
@@ -183,12 +184,102 @@ public class Program
        
     }
 
-    
-
-    private static void MixTapeCreator(ITrackRepository trackRepo)
+    private static void MixTapeCreator(ITrackRepository trackRepo, MixTapeQueue mixTape)
     {
-        Console.WriteLine("\n== MIXTAPE CREATOR ==\n");
-        Console.WriteLine($"Track catalog has {trackRepo.GetAll().Count} seeded tracks ready to use.\n");
+        var running = true;
+        while (running)
+        {
+            Console.WriteLine("\n== MIXTAPE CREATOR ==");
+            Console.WriteLine("1- Add tracks to queue");
+            Console.WriteLine("2- Play queue");
+            Console.WriteLine("3- Clear queue");
+            Console.WriteLine("0- Back to main menu");
+
+            int choice = int.Parse(Console.ReadLine() ?? "");
+            switch (choice)
+            {
+                case 1:
+                    EnqueueTrack(trackRepo, mixTape);
+                    break;
+                case 2:
+                    PlayMixTape(mixTape);
+                    break;
+                case 3:
+                    mixTape.Clear();
+                    Log.Information("Mixtape queue cleared");
+                    Console.WriteLine("\nMixtape queue cleared.\n");
+                    break;
+                case 0:
+                    running = false;
+                    break;
+            }
+        }
+    }
+
+    private static void PrintTrackCatalog(ITrackRepository trackRepo)
+    {
+        Console.WriteLine("\n=== Track Catalog ===\n");
+        foreach (Track track in trackRepo.GetAll())
+        {
+            Console.WriteLine(track.Describe());
+        }
+        Console.WriteLine("\n");
+    }
+
+    private static void EnqueueTrack(ITrackRepository trackRepo, MixTapeQueue mixTape)
+    {
+        PrintTrackCatalog(trackRepo);
+        Console.WriteLine("Enter track IDs to add to your mixtape.");
+        Console.WriteLine("Select 0 when you are done building the mix.\n");
+
+        var selecting = true;
+        while (selecting)
+        {
+            Console.WriteLine($"[{mixTape.PendingCount} track(s) in queue] Enter track ID:");
+            int trackId = int.Parse(Console.ReadLine() ?? "");
+
+            if (trackId == 0)
+            {
+                Console.WriteLine("\nMixtape selection complete.\n");
+                selecting = false;
+                continue;
+            }
+
+            Track? track = trackRepo.GetById(trackId);
+            if (track is null)
+            {
+                Log.Warning("Track lookup failed for id {Id}", trackId);
+                Console.WriteLine($"No track found with id {trackId}. Try again.\n");
+                continue;
+            }
+
+            mixTape.Enqueue(track);
+            Log.Information("Enqueued {Title} - id: {Id}", track.Title, track.Id);
+            Console.WriteLine($"Added \"{track.Title}\" to the mixtape queue (position {mixTape.PendingCount}).\n");
+        }
+    }
+
+    private static void PlayMixTape(MixTapeQueue mixTape)
+    {
+        if (mixTape.PendingCount == 0)
+        {
+            Log.Warning("Play refused: mixtape queue is empty");
+            Console.WriteLine("\nThe mixtape queue is empty — add tracks first.\n");
+            return;
+        }
+
+        Console.WriteLine("\n=== Now playing your mixtape (FIFO order) ===\n");
+        while (mixTape.PendingCount > 0)
+        {
+            Track? track = mixTape.PlayNext();
+            if (track is null)
+                break;
+
+            Log.Information("Now playing {Title} by {Artist}", track.Title, track.Artist);
+            Console.WriteLine($"▶ {track.Title} — {track.Artist} ({track.DurationSeconds}s)");
+            Thread.Sleep(Math.Min(track.DurationSeconds * 1000, 3000));
+        }
+        Console.WriteLine("\nMixtape finished!\n");
     }
 
     private static void PrintMenu()
