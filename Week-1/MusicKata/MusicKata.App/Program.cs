@@ -13,7 +13,9 @@ public class Program
             List<InstrumentItem> guitarSection = new List<InstrumentItem>
             {
                 new Guitar(1500, "Electric", "Fender", "Stratocaster", 6, true, 3),
+                new Guitar(950, "Acoustic", "Taylor", "214aa", 6, false, 3),
                 new Guitar(1200, "Acoustic", "Gibson", "J-45", 6, false, 2),
+                new Guitar(920, "Acoustic", "Taylor", "214bb", 6, true, 5),
                 new Guitar(1000, "Bass", "Ibanez", "SR500", 4, true, 4),
                 new Guitar(1800, "Electric", "PRS", "Custom 24", 6, true, 1),
                 new Guitar(900, "Acoustic", "Taylor", "214ce", 6, false, 5)
@@ -24,6 +26,7 @@ public class Program
                 new Piano(3000, "Grand", "Steinway", "Model D", true, 1),
                 new Piano(2500, "Upright", "Yamaha", "U3", true, 2),
                 new Piano(2000, "Digital", "Roland", "FP-90X", false, 4),
+                new Piano(3000, "Grand", "Steinway", "Model A", true, 2),
                 new Piano(3500, "Baby Grand", "Kawai", "GL-10", true, 1),
                 new Piano(4000, "Concert Grand", "Bösendorfer", "280VC", true, 1),
         };
@@ -244,6 +247,7 @@ public class Program
                             subList.Insert(innerIndex, item);
                             Console.WriteLine($"Undo successful: Restored {item.Brand} {item.Model} to catalog.");
                         }
+                        hasUndo=false;
                     }
                     else
                     {
@@ -279,7 +283,9 @@ public class Program
                     Console.WriteLine("\nListing items...\n\n");
                     foreach (var section in catalog)
                     {
-                        foreach (var item in section)
+                        Console.WriteLine($"=== In {sectionNames[catalog.IndexOf(section)]} ===");
+                        var query = section.OrderBy(brand => brand.Brand);
+                        foreach (var item in query)
                         {
                             Console.WriteLine(item.Describe());
                         }
@@ -292,7 +298,8 @@ public class Program
                     foreach (var section in catalog)
                     {
                         Console.WriteLine($"=== In {sectionNames[catalog.IndexOf(section)]} ===");
-                        foreach (var item in section)
+                        var query = section.OrderBy(price => price.Price);
+                        foreach (var item in query)
                         {
                             Console.WriteLine(item.Describe());
                         }
