@@ -2,6 +2,7 @@ using Serilog;
 
 namespace MusicKata.Domain;
 
+// pre-definition for a 2×4 catalog wall — row/col ready for a future grid view command
 public readonly struct GridPosition
 {
     public int Row { get; }
@@ -27,7 +28,6 @@ public class InMemoryTrackRepository : ITrackRepository
 
     private void SeedTracks()
     {
-        // 2×4 catalog wall — row/col ready for a future grid view command
         _tracks.Add(new Track(1, "Bohemian Rhapsody", "Queen", 354, TrackGenre.Rock, new GridPosition(0, 0)));
         _tracks.Add(new Track(2, "Billie Jean", "Michael Jackson", 294, TrackGenre.Pop, new GridPosition(0, 1)));
         _tracks.Add(new Track(3, "Take Five", "Dave Brubeck", 324, TrackGenre.Jazz, new GridPosition(0, 2)));
@@ -46,7 +46,7 @@ public class InMemoryTrackRepository : ITrackRepository
 
     public List<Track> GetAll() => _tracks.ToList();
 
-    public Track? GetById(int id)
+    public Track GetById(int id)
     {
         foreach (Track track in _tracks)
         {
@@ -55,6 +55,6 @@ public class InMemoryTrackRepository : ITrackRepository
         }
 
         Log.Warning("Track lookup failed for id {Id}", id);
-        return null;
+        throw new TrackNotFoundException(id);
     }
 }

@@ -8,10 +8,10 @@ public class MixTapeQueue
 
     public void Enqueue(Track track) => _playQueue.Enqueue(track);
 
-    public Track? PlayNext()
+    public Track PlayNext()
     {
         if (_playQueue.Count == 0)
-            return null;
+            throw new EmptyPlayQueueException();
 
         return _playQueue.Dequeue();
     }

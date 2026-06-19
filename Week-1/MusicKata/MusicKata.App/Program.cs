@@ -1,4 +1,4 @@
-﻿using MusicKata.Domain;
+using MusicKata.Domain;
 using Serilog;
 
 namespace MusicKata.App;
@@ -7,6 +7,7 @@ public class Program
 {
     public static void Main()
     {
+        //logger to register from intital run
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.Console()
@@ -184,6 +185,17 @@ public class Program
        
     }
 
+    private static bool TryParseMenuInput(string? input, out int value)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            value = 0;
+            return false;
+        }
+
+        return int.TryParse(input, out value);
+    }
+
     private static void MixTapeCreator(ITrackRepository trackRepo, MixTapeQueue mixTape)
     {
         var running = true;
@@ -195,7 +207,12 @@ public class Program
             Console.WriteLine("3- Clear queue");
             Console.WriteLine("0- Back to main menu");
 
-            int choice = int.Parse(Console.ReadLine() ?? "");
+            if (!TryParseMenuInput(Console.ReadLine(), out int choice))
+            {
+                Console.WriteLine("Invalid input — please enter a menu option.\n");
+                continue;
+            }
+
             switch (choice)
             {
                 case 1:
@@ -211,6 +228,9 @@ public class Program
                     break;
                 case 0:
                     running = false;
+                    break;
+                default:
+                    Console.WriteLine("Unknown option — try again.\n");
                     break;
             }
         }
@@ -236,7 +256,11 @@ public class Program
         while (selecting)
         {
             Console.WriteLine($"[{mixTape.PendingCount} track(s) in queue] Enter track ID:");
-            int trackId = int.Parse(Console.ReadLine() ?? "");
+            if (!TryParseMenuInput(Console.ReadLine(), out int trackId))
+            {
+                Console.WriteLine("Invalid input — please enter a track ID or 0 to finish.\n");
+                continue;
+            }
 
             if (trackId == 0)
             {
@@ -245,41 +269,61 @@ public class Program
                 continue;
             }
 
-            Track? track = trackRepo.GetById(trackId);
-            if (track is null)
+            try
             {
-                Log.Warning("Track lookup failed for id {Id}", trackId);
-                Console.WriteLine($"No track found with id {trackId}. Try again.\n");
-                continue;
+                Track track = trackRepo.GetById(trackId);
+                mixTape.Enqueue(track);
+                Log.Information("Enqueued {Title} - id: {Id}", track.Title, track.Id);
+                Console.WriteLine($"Added \"{track.Title}\" to the mixtape queue (position {mixTape.PendingCount}).\n");
             }
-
-            mixTape.Enqueue(track);
-            Log.Information("Enqueued {Title} - id: {Id}", track.Title, track.Id);
-            Console.WriteLine($"Added \"{track.Title}\" to the mixtape queue (position {mixTape.PendingCount}).\n");
+            catch (TrackNotFoundException ex)
+            {
+                Log.Warning("Track lookup failed for {Id}: {Message}", ex.Id, ex.Message);
+                Console.WriteLine($"No track found with id {ex.Id}. Try again.\n");
+            }
+            catch (MusicStoreException ex)
+            {
+                Log.Error("Music store error: {Message}", ex.Message);
+                Console.WriteLine($"{ex.Message}\n");
+            }
+            finally
+            {
+                Console.WriteLine("Queue operation complete.");
+            }
         }
     }
 
     private static void PlayMixTape(MixTapeQueue mixTape)
     {
-        if (mixTape.PendingCount == 0)
+        try
         {
-            Log.Warning("Play refused: mixtape queue is empty");
-            Console.WriteLine("\nThe mixtape queue is empty — add tracks first.\n");
-            return;
-        }
+            if (mixTape.PendingCount == 0)
+                throw new EmptyPlayQueueException();
 
-        Console.WriteLine("\n=== Now playing your mixtape (FIFO order) ===\n");
-        while (mixTape.PendingCount > 0)
+            Console.WriteLine("\n=== Now playing your mixtape ===\n");
+            while (mixTape.PendingCount > 0)
+            {
+                Track track = mixTape.PlayNext();
+                Log.Information("Now playing {Title} by {Artist}", track.Title, track.Artist);
+                Console.WriteLine($"▶ {track.Title} — {track.Artist} ({track.DurationSeconds}s)");
+                Thread.Sleep(Math.Min(track.DurationSeconds * 1000, 3000));
+            }
+            Console.WriteLine("\nMixtape finished!\n");
+        }
+        catch (EmptyPlayQueueException ex)
         {
-            Track? track = mixTape.PlayNext();
-            if (track is null)
-                break;
-
-            Log.Information("Now playing {Title} by {Artist}", track.Title, track.Artist);
-            Console.WriteLine($"▶ {track.Title} — {track.Artist} ({track.DurationSeconds}s)");
-            Thread.Sleep(Math.Min(track.DurationSeconds * 1000, 3000));
+            Log.Warning("Play refused: {Message}", ex.Message);
+            Console.WriteLine($"\n{ex.Message}\n");
         }
-        Console.WriteLine("\nMixtape finished!\n");
+        catch (MusicStoreException ex)
+        {
+            Log.Error("Playback error: {Message}", ex.Message);
+            Console.WriteLine($"\n{ex.Message}\n");
+        }
+        finally
+        {
+            Console.WriteLine("Playback session ended.");
+        }
     }
 
     private static void PrintMenu()
