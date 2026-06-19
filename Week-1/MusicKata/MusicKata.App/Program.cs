@@ -1,4 +1,4 @@
-using MusicKata.Domain;
+﻿using MusicKata.Domain;
 using Serilog;
 
 namespace MusicKata.App;
@@ -11,6 +11,7 @@ public class Program
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.Console()
+            .WriteTo.File("logs/logs.text", rollingInterval: RollingInterval.Infinite)
             .CreateLogger();
 
         List<List<InstrumentItem>> catalog = new List<List<InstrumentItem>>{};
@@ -80,7 +81,7 @@ public class Program
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
                 case 6: MixTapeCreator(trackRepo, mixTape); break;
-                case 7: MusicRecord(); break;
+                case 7: MusicRecord(trackRepo); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
@@ -275,7 +276,7 @@ public class Program
             {
                 Track track = trackRepo.GetById(trackId);
                 mixTape.Enqueue(track);
-                Log.Information("Enqueued {Title} - id: {Id}", track.Title, track.Id);
+                Log.Information("Enqueued {Title} - id: {Id}", track.Title, track.ISRC);
                 Console.WriteLine($"Added \"{track.Title}\" to the mixtape queue (position {mixTape.PendingCount}).\n");
             }
             catch (TrackNotFoundException ex)
@@ -494,6 +495,8 @@ public class Program
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
     }
 
+
+    #region Music Records
     /// <summary>
     /// Display of Music Record menu.
     /// </summary>
@@ -515,7 +518,7 @@ public class Program
     /// <summary>
     /// Music Record menu logic.
     /// </summary>
-    private static void MusicRecord()
+    private static void MusicRecord(ITrackRepository trackRepo)
     {
         Console.Clear();
         Console.WriteLine(MUSIC_RECORD_MENU);
@@ -523,9 +526,10 @@ public class Program
         switch (option)
         {
             case 1:
-                LocateTrack();
+                LocateTrack(trackRepo);
                 break;
             case 2:
+                MusicInformation(trackRepo);
                 break;
             case 3:
                 break;
@@ -537,12 +541,11 @@ public class Program
 
     }
 
-    private static void LocateTrack()
+    private static void LocateTrack(ITrackRepository trackRepo)
     {
         try
         {
             Console.Clear();
-            InMemoryTrackRepository trackRepo = new();
             Console.WriteLine("Enter Id of track.");
             int? trackId = int.TryParse(Console.ReadLine(), out int result) ? result : null;
 
@@ -562,4 +565,31 @@ public class Program
             Log.Warning("Something went wrong locating the track. {Message}", ex.Message);
         }
     }
+
+    private static void MusicInformation(ITrackRepository trackRepo)
+    {
+        Console.Clear();
+        Console.WriteLine("Input Music record key:");
+        int? recordIsrc = int.TryParse(Console.ReadLine(), out int result) ? result : null;
+        if (recordIsrc is null) {
+            Log.Warning("Invalid input. Going back.}"); 
+            return;
+        }
+        Track? track = trackRepo.GetById((int)recordIsrc);
+        if (track is null)
+        {
+            Log.Warning("Track with ISRC: {Isrc}", recordIsrc);
+            return;
+        }
+
+        Dictionary<int, Track> myTrack = new Dictionary<int, Track>
+        {
+            { track.ISRC, track }
+        };
+
+        Console.WriteLine(myTrack.ToPrettyString());
+
+
+    }
+    #endregion Music Records
 }

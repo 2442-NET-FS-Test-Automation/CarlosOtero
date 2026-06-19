@@ -2,7 +2,6 @@ using Serilog;
 
 namespace MusicKata.Domain;
 
-// pre-definition for a 2×4 catalog wall — row/col ready for a future grid view command
 public readonly struct GridPosition
 {
     public int Row { get; }
@@ -41,7 +40,7 @@ public class InMemoryTrackRepository : ITrackRepository
     public void Add(Track track)
     {
         _tracks.Add(track);
-        Log.Information("Added track {Title} - id: {Id}", track.Title, track.Id);
+        Log.Information("Added track {Title} - ISRC: {ISRC}", track.Title, track.ISRC);
     }
 
     public List<Track> GetAll() => _tracks.ToList();
@@ -59,6 +58,6 @@ public class InMemoryTrackRepository : ITrackRepository
 
     public Dictionary<int, Track> ParseToDictionary(List<Track> tracks)
     {
-        return tracks.ToDictionary(x => x.Id);
+        return tracks.ToDictionary(x => x.ISRC);
     }
 }

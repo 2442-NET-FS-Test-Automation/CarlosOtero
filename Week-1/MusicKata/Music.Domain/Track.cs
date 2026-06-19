@@ -2,7 +2,7 @@ namespace MusicKata.Domain;
 
 public class Track
 {
-    public int Id { get; }
+    public int ISRC { get; }
     public string Title { get; }
     public string Artist { get; }
     public int DurationSeconds { get; }
@@ -19,7 +19,7 @@ public class Track
         TrackGenre genre,
         GridPosition catalogSpot)
     {
-        Id = id;
+        ISRC = id;
         Title = title;
         Artist = artist;
         DurationSeconds = durationSeconds;
@@ -29,7 +29,7 @@ public class Track
     }
 
     public string Describe() =>
-        $"{Id}: {Title} by {Artist} ({DurationSeconds}s) — {Genre} @ {CatalogSpot}";
+        $"{ISRC}: {Title} by {Artist} ({DurationSeconds}s) — {Genre} @ {CatalogSpot}";
 
     public override string ToString() => Describe();
 
