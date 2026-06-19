@@ -1,4 +1,5 @@
 ﻿using System.Reflection.PortableExecutable;
+using Microsoft.VisualBasic;
 using MusicKata.Domain;
 
 namespace MusicKata.App;
@@ -54,8 +55,7 @@ public class Program
                 new Drum(2500, "Gretsch", "Renown", 6, 8, 5),
         };
         catalog.Add(drumSection);
-        Stack<InstrumentItem> UndoStack = new();
-        int UndoId_Temp = 0;
+        Stack<(InstrumentItem Item, int OuterIndex, int InnerIndex)> undoStack = new Stack<(InstrumentItem, int, int)>();
         bool hasUndo = false;
 
         List<IRent> RentedItems = new List<IRent>();
@@ -67,7 +67,7 @@ public class Program
             switch (choice)
             {
                 case 1: AddItem(catalog); break;
-                case 2: RemoveItem(catalog, hasUndo, UndoStack,UndoId_Temp); break;
+                case 2: RemoveItem(catalog, ref hasUndo, undoStack); break;
                 case 3: ListItems(catalog); break;
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
@@ -200,7 +200,7 @@ public class Program
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
     }
 
-    private static void RemoveItem(List<List<InstrumentItem>> catalog, bool hasUndo, Stack<InstrumentItem> undoStack, int undoId_Temp)
+    private static void RemoveItem(List<List<InstrumentItem>> catalog, ref bool hasUndo, Stack<(InstrumentItem, int, int)> undoStack)
     {
         var running = true;
         while (running)
@@ -208,30 +208,52 @@ public class Program
             Console.WriteLine("1. Remove item");
             if(hasUndo == true)
                 Console.WriteLine("2. Undo Removal");
-            Console.WriteLine("0. Exit");
+            Console.WriteLine("0. Exit\n");
             int choice = int.Parse(Console.ReadLine()?? "");
             switch ((choice,hasUndo))
             {
                 case (1, _): 
                     Console.WriteLine("Enter the ID of the item you want to sell:");
                     int id = int.Parse(Console.ReadLine()?? "");
-                    foreach (var section in catalog)
+                    for(int outerIndex = 0; outerIndex < catalog.Count; outerIndex++)
                     {
-                        var item = section.FirstOrDefault(i => i.Id == id);
-                        if (item != null)  
-                            undoStack.Push(item);
-                            undoId_Temp = id;
-                            section.Remove(item);
+                        var subList = catalog[outerIndex];
+                        int innerIndex = subList.FindIndex(i => i.Id == id);
+                        if (innerIndex != -1) 
+                        {
+                            InstrumentItem removedItem = subList[innerIndex];
+                            undoStack.Push((removedItem, outerIndex, innerIndex));
+                            subList.RemoveAt(innerIndex);
                             hasUndo = true;
+                            Console.WriteLine($"Removed {removedItem.Brand} {removedItem.Model} successfully.");
+                            break; 
+                        }
                     }
                     Console.WriteLine($"\nYou have removed item with ID {id}.\n");
                 break;
                 case (2, true): 
                     Console.WriteLine("Reverting action...");
-                    var command = undoStack.Pop();
-                    Console.WriteLine($"The thing in command{command}");
-                    //catalog.Insert(command.Id,command);
+                    if (undoStack.Count > 0)
+                        {var (item, outerIndex, innerIndex) = undoStack.Pop();
+                    if (outerIndex >= 0 && outerIndex < catalog.Count)
+                    {
+                        var subList = catalog[outerIndex];
 
+                        if (innerIndex >= 0 && innerIndex <= subList.Count)
+                        {
+                            subList.Insert(innerIndex, item);
+                            Console.WriteLine($"Undo successful: Restored {item.Brand} {item.Model} to catalog.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error: The original category section no longer exists.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Nothing to undo!");
+                }
                     
                 break;
                 case (0, _): 
@@ -242,13 +264,14 @@ public class Program
             
         }
     }
+
     
     private static void ListItems(List<List<InstrumentItem>> catalog)
     {
         List<string> sectionNames = new List<string> { "Guitars", "Pianos", "Trumpets", "Microphone", "Drums" };
         var running = true;
         while (running){
-        Console.WriteLine("1. ORDER BY Brand\n2. ORDER BY Price\n3. List all items");
+        Console.WriteLine("1. ORDER BY Brand\n2. ORDER BY Price\n3. List all items\n0. Exit\n");
         int choice = int.Parse(Console.ReadLine()?? "");   // naive: may throw on bad input — fine for now
             switch (choice)
             {
