@@ -17,5 +17,4 @@ public class Drum : InstrumentItem
     {
         return $"{Id}: {Brand} {Model} drum set with {DrumAmount} drums and {PlateAmount} plates. Available: {AmountAvailable}. Price: ${Price}.";
     }
-    
 }
