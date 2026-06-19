@@ -1,4 +1,5 @@
 ﻿using MusicKata.Domain;
+using Serilog;
 
 namespace MusicKata.App;
 
@@ -6,6 +7,11 @@ public class Program
 {
     public static void Main()
     {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .CreateLogger();
+
         List<List<InstrumentItem>> catalog = new List<List<InstrumentItem>>{};
         
             List<InstrumentItem> guitarSection = new List<InstrumentItem>
@@ -55,6 +61,10 @@ public class Program
         catalog.Add(drumSection);
 
         List<IRent> RentedItems = new List<IRent>();
+        ITrackRepository trackRepo = new InMemoryTrackRepository();
+
+        Log.Information("Music Store Manager started with {TrackCount} seeded tracks", trackRepo.GetAll().Count);
+
         var running = true;
         while (running)
         {
@@ -67,10 +77,12 @@ public class Program
                 case 3: ListItems(catalog); break;
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
+                case 6: MixTapeCreator(trackRepo); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
 
+        Log.CloseAndFlush();
     }
 
     private static void PrintRented(List<IRent> rentedItem)
@@ -171,10 +183,18 @@ public class Program
        
     }
 
+    
+
+    private static void MixTapeCreator(ITrackRepository trackRepo)
+    {
+        Console.WriteLine("\n== MIXTAPE CREATOR ==\n");
+        Console.WriteLine($"Track catalog has {trackRepo.GetAll().Count} seeded tracks ready to use.\n");
+    }
+
     private static void PrintMenu()
     {
         Console.WriteLine("\n=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n0. Exit\n");
+        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n0. Exit\n");
     }
 
     private static void RemoveItem(List<List<InstrumentItem>> catalog)
