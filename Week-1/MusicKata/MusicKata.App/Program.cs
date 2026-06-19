@@ -185,6 +185,7 @@ public class Program
        
     }
 
+    // method to parse the menu input and return the value as an integer as an human error handling 
     private static bool TryParseMenuInput(string? input, out int value)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -306,7 +307,8 @@ public class Program
                 Track track = mixTape.PlayNext();
                 Log.Information("Now playing {Title} by {Artist}", track.Title, track.Artist);
                 Console.WriteLine($"▶ {track.Title} — {track.Artist} ({track.DurationSeconds}s)");
-                Thread.Sleep(Math.Min(track.DurationSeconds * 1000, 3000));
+                // method from C# to create a "timeout" to pass to "the next song in the queue"
+                Thread.Sleep(3000);
             }
             Console.WriteLine("\nMixtape finished!\n");
         }
