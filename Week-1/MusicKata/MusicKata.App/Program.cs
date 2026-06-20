@@ -1,6 +1,5 @@
-﻿using System.Reflection.PortableExecutable;
-using Microsoft.VisualBasic;
-using MusicKata.Domain;
+﻿using MusicKata.Domain;
+using Serilog;
 
 namespace MusicKata.App;
 
@@ -8,6 +7,13 @@ public class Program
 {
     public static void Main()
     {
+        //logger to register from intital run
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .WriteTo.File("logs/logs.text", rollingInterval: RollingInterval.Infinite)
+            .CreateLogger();
+
         List<List<InstrumentItem>> catalog = new List<List<InstrumentItem>>{};
         
             List<InstrumentItem> guitarSection = new List<InstrumentItem>
@@ -62,6 +68,11 @@ public class Program
         bool hasUndo = false;
 
         List<IRent> RentedItems = new List<IRent>();
+        ITrackRepository trackRepo = new InMemoryTrackRepository();
+        MixTapeQueue mixTape = new MixTapeQueue();
+
+        Log.Information("Music Store Manager started with {TrackCount} seeded tracks", trackRepo.GetAll().Count);
+
         var running = true;
         while (running)
         {
@@ -74,12 +85,254 @@ public class Program
                 case 3: ListItems(catalog); break;
                 case 4: SellItem(catalog); break;
                 case 5: Renting(catalog,RentedItems); break;
-                case 6: MixtapeCreator(); break;
-                case 7: MusicRecords(); break;
+                case 6: MixTapeCreator(trackRepo, mixTape); break;
+                case 7: MusicRecord(trackRepo); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
 
+        Log.CloseAndFlush();
+    }
+
+    private static void PrintRented(List<IRent> rentedItem)
+    {
+        Console.WriteLine("\nListing rented items...\n\n");
+        foreach (var item in rentedItem)
+            {
+                Console.WriteLine(item);
+            }
+        Console.WriteLine("\n");
+    }
+    private static void PrintRentables(List<List<InstrumentItem>> catalog)
+    {
+        Console.WriteLine("\nListing rentable items...\n\n");
+                foreach (var section in catalog)
+                {
+                    foreach (var item in section)
+                    {
+                        if (item is IRent rentableItem && rentableItem.CanRent)
+                        {
+                            Console.WriteLine(item.Describe());
+                        }
+                    }
+                }
+        Console.WriteLine("\n");
+    }
+    private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
+    {
+        var running = true;
+        while (running)
+        {
+            
+        Console.WriteLine("\n==RENTING MANAGER==\n1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
+        int choice = int.Parse(Console.ReadLine()?? "");
+        switch (choice)       {
+            case 1:
+                PrintRentables(catalog);
+            break;
+            case 2: 
+                PrintRented(rentedItem);
+            break;
+            case 3: 
+                PrintRentables(catalog);
+                Console.WriteLine("Enter the item number you wish to rent:");
+                int rentNumber = int.Parse(Console.ReadLine()?? "");
+                foreach (var section in catalog)
+                {
+                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
+                    if (item != null)
+                    {
+                        if (item is IRent rentableItem)
+                        {
+                            rentableItem.Rent();
+                            rentedItem.Add(rentableItem);
+                            rentableItem.IsRented();
+                            Console.WriteLine($"\nItem with ID {rentNumber} has been rented.\n");
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"\nSorry, the item with ID {rentNumber} is not available for rent.\n");
+                            return;
+                        }
+                    }
+                    
+                }
+                Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
+            break;
+            case 4: 
+                PrintRented(rentedItem);
+                Console.WriteLine("Enter the item number you wish to return:\n");
+                rentNumber = int.Parse(Console.ReadLine()?? "");
+                foreach (var section in catalog)
+                {
+                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
+                    if (item != null)
+                    {
+                        if (item is IRent rentableItem)
+                        {
+                            rentableItem.Return();
+                            rentedItem.Remove(rentableItem);
+                            Console.WriteLine($"\nThanks for returning item with ID {rentNumber}.\n");
+                            return;
+                        }
+                        else
+                        {   
+                            Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
+                            return;
+                        }
+                    }
+                }
+            break;
+            case 0: 
+            running = false;
+            return;
+        }
+        }
+       
+    }
+
+    // method to parse the menu input and return the value as an integer as an human error handling 
+    private static bool TryParseMenuInput(string? input, out int value)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            value = 0;
+            return false;
+        }
+
+        return int.TryParse(input, out value);
+    }
+
+    private static void MixTapeCreator(ITrackRepository trackRepo, MixTapeQueue mixTape)
+    {
+        var running = true;
+        while (running)
+        {
+            Console.WriteLine("\n== MIXTAPE CREATOR ==");
+            Console.WriteLine("1- Add tracks to queue");
+            Console.WriteLine("2- Play queue");
+            Console.WriteLine("3- Clear queue");
+            Console.WriteLine("0- Back to main menu");
+
+            if (!TryParseMenuInput(Console.ReadLine(), out int choice))
+            {
+                Console.WriteLine("Invalid input — please enter a menu option.\n");
+                continue;
+            }
+
+            switch (choice)
+            {
+                case 1:
+                    EnqueueTrack(trackRepo, mixTape);
+                    break;
+                case 2:
+                    PlayMixTape(mixTape);
+                    break;
+                case 3:
+                    mixTape.Clear();
+                    Log.Information("Mixtape queue cleared");
+                    Console.WriteLine("\nMixtape queue cleared.\n");
+                    break;
+                case 0:
+                    running = false;
+                    break;
+                default:
+                    Console.WriteLine("Unknown option — try again.\n");
+                    break;
+            }
+        }
+    }
+
+    private static void PrintTrackCatalog(ITrackRepository trackRepo)
+    {
+        Console.WriteLine("\n=== Track Catalog ===\n");
+        foreach (Track track in trackRepo.GetAll())
+        {
+            Console.WriteLine(track.Describe());
+        }
+        Console.WriteLine("\n");
+    }
+
+    private static void EnqueueTrack(ITrackRepository trackRepo, MixTapeQueue mixTape)
+    {
+        PrintTrackCatalog(trackRepo);
+        Console.WriteLine("Enter track IDs to add to your mixtape.");
+        Console.WriteLine("Select 0 when you are done building the mix.\n");
+
+        var selecting = true;
+        while (selecting)
+        {
+            Console.WriteLine($"[{mixTape.PendingCount} track(s) in queue] Enter track ID:");
+            if (!TryParseMenuInput(Console.ReadLine(), out int trackId))
+            {
+                Console.WriteLine("Invalid input — please enter a track ID or 0 to finish.\n");
+                continue;
+            }
+
+            if (trackId == 0)
+            {
+                Console.WriteLine("\nMixtape selection complete.\n");
+                selecting = false;
+                continue;
+            }
+
+            try
+            {
+                Track track = trackRepo.GetById(trackId);
+                mixTape.Enqueue(track);
+                Log.Information("Enqueued {Title} - id: {Id}", track.Title, track.ISRC);
+                Console.WriteLine($"Added \"{track.Title}\" to the mixtape queue (position {mixTape.PendingCount}).\n");
+            }
+            catch (TrackNotFoundException ex)
+            {
+                Log.Warning("Track lookup failed for {Id}: {Message}", ex.Id, ex.Message);
+                Console.WriteLine($"No track found with id {ex.Id}. Try again.\n");
+            }
+            catch (MusicStoreException ex)
+            {
+                Log.Error("Music store error: {Message}", ex.Message);
+                Console.WriteLine($"{ex.Message}\n");
+            }
+            finally
+            {
+                Console.WriteLine("Queue operation complete.");
+            }
+        }
+    }
+
+    private static void PlayMixTape(MixTapeQueue mixTape)
+    {
+        try
+        {
+            if (mixTape.PendingCount == 0)
+                throw new EmptyPlayQueueException();
+
+            Console.WriteLine("\n=== Now playing your mixtape ===\n");
+            while (mixTape.PendingCount > 0)
+            {
+                Track track = mixTape.PlayNext();
+                Log.Information("Now playing {Title} by {Artist}", track.Title, track.Artist);
+                Console.WriteLine($"▶ {track.Title} — {track.Artist} ({track.DurationSeconds}s)");
+                // method from C# to create a "timeout" to pass to "the next song in the queue"
+                Thread.Sleep(3000);
+            }
+            Console.WriteLine("\nMixtape finished!\n");
+        }
+        catch (EmptyPlayQueueException ex)
+        {
+            Log.Warning("Play refused: {Message}", ex.Message);
+            Console.WriteLine($"\n{ex.Message}\n");
+        }
+        catch (MusicStoreException ex)
+        {
+            Log.Error("Playback error: {Message}", ex.Message);
+            Console.WriteLine($"\n{ex.Message}\n");
+        }
+        finally
+        {
+            Console.WriteLine("Playback session ended.");
+        }
     }
 
     private static void PrintMenu()
@@ -203,6 +456,103 @@ public class Program
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
     }
 
+
+    #region Music Records
+    /// <summary>
+    /// Display of Music Record menu.
+    /// </summary>
+    private const string MUSIC_RECORD_MENU =
+        """
+        1: Locate by name
+        2: Get music records information by key
+        3: List all (Artists, Genres) available
+        4: Go back
+        """;
+    
+    private const string MR_LIST_ATTRIBUTES =
+        """
+        1: List available artists
+        2: List available genres
+        3: Go back
+        """;
+
+    /// <summary>
+    /// Music Record menu logic.
+    /// </summary>
+    private static void MusicRecord(ITrackRepository trackRepo)
+    {
+        Console.Clear();
+        Console.WriteLine(MUSIC_RECORD_MENU);
+        int? option = int.TryParse(Console.ReadLine(), out int result) ? result : null;
+        switch (option)
+        {
+            case 1:
+                LocateTrack(trackRepo);
+                break;
+            case 2:
+                MusicInformation(trackRepo);
+                break;
+            case 3:
+                break;
+            case 4:
+            default:
+                return;
+        }
+
+
+    }
+
+    private static void LocateTrack(ITrackRepository trackRepo)
+    {
+        try
+        {
+            Console.Clear();
+            Console.WriteLine("Enter Id of track.");
+            int? trackId = int.TryParse(Console.ReadLine(), out int result) ? result : null;
+
+            Track? track = trackId is not null ? trackRepo.GetById((int)trackId) : null;
+
+            if(track is not null)
+            {
+                track.PlaceTrack(track.CatalogSpot.Row, track.CatalogSpot.Col);
+                track.PrintLocation();
+                return;
+            }
+                Console.WriteLine("Track not found"); return;
+
+            
+        }catch(Exception ex)
+        {
+            Log.Warning("Something went wrong locating the track. {Message}", ex.Message);
+        }
+    }
+
+    private static void MusicInformation(ITrackRepository trackRepo)
+    {
+        Console.Clear();
+        Console.WriteLine("Input Music record key:");
+        int? recordIsrc = int.TryParse(Console.ReadLine(), out int result) ? result : null;
+        if (recordIsrc is null) {
+            Log.Warning("Invalid input. Going back.}"); 
+            return;
+        }
+        Track? track = trackRepo.GetById((int)recordIsrc);
+        if (track is null)
+        {
+            Log.Warning("Track with ISRC: {Isrc}", recordIsrc);
+            return;
+        }
+
+        Dictionary<int, Track> myTrack = new Dictionary<int, Track>
+        {
+            { track.ISRC, track }
+        };
+
+        Console.WriteLine(myTrack.ToPrettyString());
+
+
+    }
+    #endregion Music Records
     private static void RemoveItem(List<List<InstrumentItem>> catalog, ref bool hasUndo, Stack<(InstrumentItem, int, int)> undoStack)
     {
         var running = true;
