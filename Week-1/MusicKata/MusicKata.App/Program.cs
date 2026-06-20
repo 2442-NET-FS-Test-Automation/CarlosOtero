@@ -185,7 +185,7 @@ public class Program
                 }
             break;
             case 0: 
-            running = false;
+                running = false;
             return;
         }
         }
@@ -698,105 +698,6 @@ public class Program
         Console.WriteLine($"\nYou have sold item with ID {id}.");
     }
 
-    private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
-    {
-        var running = true;
-        while (running)
-        {
-            
-        Console.WriteLine("\n==RENTING MANAGER==\n1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
-        int choice = int.Parse(Console.ReadLine()?? "");
-        switch (choice)       {
-            case 1:
-                PrintRentables(catalog);
-            break;
-            case 2: 
-                PrintRented(rentedItem);
-            break;
-            case 3: 
-                PrintRentables(catalog);
-                Console.WriteLine("Enter the item number you wish to rent:");
-                int rentNumber = int.Parse(Console.ReadLine()?? "");
-                foreach (var section in catalog)
-                {
-                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
-                    if (item != null)
-                    {
-                        if (item is IRent rentableItem)
-                        {
-                            rentableItem.Rent();
-                            rentedItem.Add(rentableItem);
-                            rentableItem.IsRented();
-                            Console.WriteLine($"\nItem with ID {rentNumber} has been rented.\n");
-                            return;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"\nSorry, the item with ID {rentNumber} is not available for rent.\n");
-                            return;
-                        }
-                    }
-                    
-                }
-                Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
-            break;
-            case 4: 
-                PrintRented(rentedItem);
-                Console.WriteLine("Enter the item number you wish to return:\n");
-                rentNumber = int.Parse(Console.ReadLine()?? "");
-                foreach (var section in catalog)
-                {
-                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
-                    if (item != null)
-                    {
-                        if (item is IRent rentableItem)
-                        {
-                            rentableItem.Return();
-                            rentedItem.Remove(rentableItem);
-                            Console.WriteLine($"\nThanks for returning item with ID {rentNumber}.\n");
-                            return;
-                        }
-                        else
-                        {   
-                            Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
-                            return;
-                        }
-                    }
-                }
-            break;
-            case 0: 
-            running = false;
-            return;
-        }
-        }
-       
-    }
-
-    private static void PrintRentables(List<List<InstrumentItem>> catalog)
-    {
-        Console.WriteLine("\nListing rentable items...\n\n");
-                foreach (var section in catalog)
-                {
-                    foreach (var item in section)
-                    {
-                        if (item is IRent rentableItem && rentableItem.CanRent)
-                        {
-                            Console.WriteLine(item.Describe());
-                        }
-                    }
-                }
-        Console.WriteLine("\n");
-    }
-
-    private static void PrintRented(List<IRent> rentedItem)
-    {
-        Console.WriteLine("\nListing rented items...\n\n");
-        foreach (var item in rentedItem)
-            {
-                Console.WriteLine(item);
-            }
-        Console.WriteLine("\n");
-    }
 
     private static void MixtapeCreator()
     {
