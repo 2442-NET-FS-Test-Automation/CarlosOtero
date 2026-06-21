@@ -532,6 +532,7 @@ public class Program
                 MusicInformation(trackRepo);
                 break;
             case 3:
+                ListAtrributes(trackRepo);
                 break;
             case 4:
             default:
@@ -590,6 +591,28 @@ public class Program
         Console.WriteLine(myTrack.ToPrettyString());
 
 
+    }
+
+    private static void ListAtrributes(ITrackRepository trackRepo)
+    {
+        try
+        {
+            Console.Clear();
+            Console.WriteLine(MR_LIST_ATTRIBUTES);
+            int? option = int.TryParse(Console.ReadLine(), out int result) ? result : null;
+            if(option is null || option > 3)
+            {
+                Log.Information("Invalid input.");
+                return;
+            }
+            if (option == 3) return;
+            trackRepo.ReturnListedAttributes((int)option);
+            
+        }
+        catch (Exception ex)
+        {
+            Log.Information("Something went wrong listing attributes: {Message}", ex.Message);
+        }
     }
     #endregion Music Records
 }
