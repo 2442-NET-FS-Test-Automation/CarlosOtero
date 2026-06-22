@@ -392,7 +392,8 @@ public class Program
     private static void AddGuitar(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine() ?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter type:");
         string type = Console.ReadLine() ?? "";
         Console.WriteLine("Enter brand:");
@@ -400,11 +401,13 @@ public class Program
         Console.WriteLine("Enter model:");
         string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter number of strings:");
-        int numberOfStrings = int.Parse(Console.ReadLine() ?? "");
+        string stringsInput = Console.ReadLine() ?? "";
+        int numberOfStrings = int.TryParse(stringsInput, out int parsedStrings) ? parsedStrings : 0;
         Console.WriteLine("Is it available for rent? (y/n)");
         bool canRent = (Console.ReadLine() ?? "").ToLower() == "y";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine() ?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
 
         var guitar = new Guitar(price, type, brand, model, numberOfStrings, canRent, amountAvailable);
         InstrumentFactory.Create(InstrumentType.Guitar, price, type, brand, model, numberOfStrings, canRent: canRent, amountAvailable: amountAvailable);
@@ -415,7 +418,8 @@ public class Program
     private static void AddMicrophone(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine() ?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter brand:");
         string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
@@ -425,18 +429,19 @@ public class Program
         Console.WriteLine("Is it wireless? (y/n)");
         bool isWireless = (Console.ReadLine() ?? "").ToLower() == "y";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine() ?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
 
         var microphone = new Microphone(price, brand, model, type, isWireless, amountAvailable);
-        InstrumentFactory.Create(InstrumentType.Microphone, price, brand, model, type, isWireless:isWireless, amountAvailable: amountAvailable);
+        InstrumentFactory.Create(InstrumentType.Microphone, price, brand, model, type, isWireless: isWireless, amountAvailable: amountAvailable);
         catalog[1].Add(microphone);
         Console.WriteLine($"Added {microphone.Brand} {microphone.Model} microphone to the catalog.\n");
     }
 
     private static void AddTrumpet(List<List<InstrumentItem>> catalog)
     {
-        Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine() ?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter brand:");
         string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
@@ -444,7 +449,8 @@ public class Program
         Console.WriteLine("Enter size:");
         string size = Console.ReadLine() ?? "";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine() ?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
 
         var trumpet = new Trumpet(price, brand, model, size, amountAvailable);
         InstrumentFactory.Create(InstrumentType.Trumpet, price, brand, model, size: size, amountAvailable: amountAvailable);
@@ -455,20 +461,24 @@ public class Program
     private static void AddDrum(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine() ?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter brand:");
         string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
         string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter number of pieces:");
-        int numberOfPieces = int.Parse(Console.ReadLine() ?? "");
+        string piecesInput = Console.ReadLine() ?? "";
+        int numberOfPieces = int.TryParse(piecesInput, out int parsedPieces) ? parsedPieces : 0;
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine() ?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
         Console.WriteLine("Enter number of cymbals:");
-        int numberOfCymbals = int.Parse(Console.ReadLine() ?? "");
-
+        string cymbalsInput = Console.ReadLine() ?? "";
+        int numberOfCymbals = int.TryParse(cymbalsInput, out int parsedCymbals) ? parsedCymbals : 0;
         var drum = new Drum(price, brand, model, numberOfPieces, amountAvailable, numberOfCymbals);
-        InstrumentFactory.Create(InstrumentType.Drums, price, brand, model, drumAmount:numberOfPieces, plateAmount:numberOfCymbals, amountAvailable:amountAvailable);
+
+        InstrumentFactory.Create(InstrumentType.Drums, price, brand, model, drumAmount: numberOfPieces, plateAmount: numberOfCymbals, amountAvailable: amountAvailable);
         catalog[3].Add(drum);
         Console.WriteLine($"Added {drum.Brand} {drum.Model} drum set to the catalog.\n");
     }
@@ -476,7 +486,8 @@ public class Program
     private static void AddPiano(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine() ?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter type:");
         string type = Console.ReadLine() ?? "";
         Console.WriteLine("Enter brand:");
@@ -484,13 +495,13 @@ public class Program
         Console.WriteLine("Enter model:");
         string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine() ?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
         Console.WriteLine("Is it available for rent? (y/n)");
         bool canRent = (Console.ReadLine() ?? "").ToLower() == "y";
 
-
         var piano = new Piano(price, type, brand, model, canRent, amountAvailable);
-        InstrumentFactory.Create(InstrumentType.Piano, price, type, brand, model, canRent:canRent, amountAvailable: amountAvailable);
+        InstrumentFactory.Create(InstrumentType.Piano, price, type, brand, model, canRent: canRent, amountAvailable: amountAvailable);
         catalog[4].Add(piano);
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
     }
