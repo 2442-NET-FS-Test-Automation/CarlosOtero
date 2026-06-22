@@ -1,5 +1,4 @@
 ﻿//If I have code from another namespace I want to use here - I use a using statement
-using LabraryKata.Domain;
 using Library.Kata.Domain;
 using LibraryKata.Domain;
 using Serilog;

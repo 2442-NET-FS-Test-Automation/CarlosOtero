@@ -1,7 +1,6 @@
 using Library.Kata.Domain;
-using LibraryKata.Domain;
 
-namespace LabraryKata.Domain;
+namespace LibraryKata.Domain;
 
 //This factory class is static. It can ONLY contain static members.
 //It CANNOT be instantiated

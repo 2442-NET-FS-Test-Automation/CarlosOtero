@@ -21,55 +21,59 @@ public class Program
             .WriteTo.File("logs/logs.text", rollingInterval: RollingInterval.Infinite)
             .CreateLogger();
 
-        List<List<InstrumentItem>> catalog = new List<List<InstrumentItem>>{};
-        
-            List<InstrumentItem> guitarSection = new List<InstrumentItem>
-            {
-                new Guitar(1500, "Electric", "Fender", "Stratocaster", 6, true, 3),
-                new Guitar(950, "Acoustic", "Taylor", "214aa", 6, false, 3),
-                new Guitar(1200, "Acoustic", "Gibson", "J-45", 6, false, 2),
-                new Guitar(920, "Acoustic", "Taylor", "214bb", 6, true, 5),
-                new Guitar(1000, "Bass", "Ibanez", "SR500", 4, true, 4),
-                new Guitar(1800, "Electric", "PRS", "Custom 24", 6, true, 1),
-                new Guitar(900, "Acoustic", "Taylor", "214ce", 6, false, 5)
-            };
+        List<List<InstrumentItem>> catalog = new List<List<InstrumentItem>> { };
+
+        List<InstrumentItem> guitarSection = new List<InstrumentItem>
+{
+    InstrumentFactory.Create(InstrumentType.Guitar, 1500, "Electric", "Fender", "Stratocaster", 6, canRent: true, amountAvailable: 0),
+    InstrumentFactory.Create(InstrumentType.Guitar, 950, "Acoustic", "Taylor", "214aa", 6, canRent:false,amountAvailable: 3),
+    InstrumentFactory.Create(InstrumentType.Guitar, 1200, "Acoustic", "Gibson", "J-45", 6, canRent:false,amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Guitar, 920, "Acoustic", "Taylor", "214bb", 6, canRent:true,amountAvailable: 5),
+    InstrumentFactory.Create(InstrumentType.Guitar, 1000, "Bass", "Ibanez", "SR500", 4, canRent:true,amountAvailable: 4),
+    InstrumentFactory.Create(InstrumentType.Guitar, 1800, "Electric", "PRS", "Custom 24", 6, canRent:true,amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Guitar, 900, "Acoustic", "Taylor", "214ce", 6, canRent:false,amountAvailable: 5)
+};
         catalog.Add(guitarSection);
+
         List<InstrumentItem> pianoSection = new List<InstrumentItem>
-        {
-                new Piano(3000, "Grand", "Steinway", "Model D", true, 1),
-                new Piano(2500, "Upright", "Yamaha", "U3", true, 2),
-                new Piano(2000, "Digital", "Roland", "FP-90X", false, 4),
-                new Piano(3000, "Grand", "Steinway", "Model A", true, 2),
-                new Piano(3500, "Baby Grand", "Kawai", "GL-10", true, 1),
-                new Piano(4000, "Concert Grand", "Bösendorfer", "280VC", true, 1),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Piano, 3000, "Grand", "Steinway", "Model D", canRent:true,amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Piano, 2500, "Upright", "Yamaha", "U3", canRent:true,amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Piano, 2000, "Digital", "Roland", "FP-90X", canRent:false,amountAvailable: 4),
+    InstrumentFactory.Create(InstrumentType.Piano, 3000, "Grand", "Steinway", "Model A", canRent:true,amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Piano, 3500, "Baby Grand", "Kawai", "GL-10", canRent:true,amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Piano, 4000, "Concert Grand", "Bösendorfer", "280VC", canRent:true,amountAvailable: 1)
+};
         catalog.Add(pianoSection);
+
         List<InstrumentItem> trumpetSection = new List<InstrumentItem>
-        {
-                new Trumpet(2000, "Bach", "Stradivarius", "BBb", 2),
-                new Trumpet(1500, "Yamaha", "Xeno", "YTR-8335RS", 3),
-                new Trumpet(1800, "Conn", "Stellavox", "52B", 1),
-                new Trumpet(2200, "Getzen", "Eterna", "590S", 2),
-                new Trumpet(2500, "Schilke", "B1", "Bb/A", 1),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Trumpet, 2000, "Bach", "Stradivarius", "BBb", 2),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 1500, "Yamaha", "Xeno", "YTR-8335RS", 3),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 1800, "Conn", "Stellavox", "52B", 1),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 2200, "Getzen", "Eterna", "590S", 2),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 2500, "Schilke", "B1", "Bb/A", 1)
+};
         catalog.Add(trumpetSection);
+
         List<InstrumentItem> microphoneSection = new List<InstrumentItem>
-        {
-                new Microphone(500, "Shure", "SM58", "Dynamic", false, 10),
-                new Microphone(800, "Neumann", "U87", "Condenser", true, 5),
-                new Microphone(300, "AKG", "C214", "Condenser", false, 7),
-                new Microphone(600, "Sennheiser", "e935", "Dynamic", false, 8),
-                new Microphone(400, "Audio-Technica", "AT2020", "Condenser", true, 6),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Microphone, 500, "Shure", "SM58", "Dynamic", isWireless:false, amountAvailable:10),
+    InstrumentFactory.Create(InstrumentType.Microphone, 800, "Neumann", "U87", "Condenser", isWireless:true, amountAvailable:5),
+    InstrumentFactory.Create(InstrumentType.Microphone, 300, "AKG", "C214", "Condenser", isWireless:false, amountAvailable:7),
+    InstrumentFactory.Create(InstrumentType.Microphone, 600, "Sennheiser", "e935", "Dynamic", isWireless:false, amountAvailable:8),
+    InstrumentFactory.Create(InstrumentType.Microphone, 400, "Audio-Technica", "AT2020", "Condenser", isWireless:true, amountAvailable:6)
+};
         catalog.Add(microphoneSection);
+
         List<InstrumentItem> drumSection = new List<InstrumentItem>
-        {
-                new Drum(1500, "Yamaha", "Masterworks", 3, 5, 2),
-                new Drum(1200, "Pearl", "Export", 5, 10, 3),
-                new Drum(2000, "Tama", "Starclassic", 4, 7, 4),
-                new Drum(1800, "Ludwig", "Breakbeats", 2, 4, 1),
-                new Drum(2500, "Gretsch", "Renown", 6, 8, 5),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Drums, 1500, "Yamaha", "Masterworks", drumAmount: 3, plateAmount: 5, amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Drums, 1200, "Pearl", "Export", drumAmount: 5, plateAmount: 10, amountAvailable: 3),
+    InstrumentFactory.Create(InstrumentType.Drums, 2000, "Tama", "Starclassic", drumAmount: 4, plateAmount: 7, amountAvailable: 4),
+    InstrumentFactory.Create(InstrumentType.Drums, 1800, "Ludwig", "Breakbeats", drumAmount: 2, plateAmount: 4, amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Drums, 2500, "Gretsch", "Renown", drumAmount: 6, plateAmount: 8, amountAvailable: 5)
+};
         catalog.Add(drumSection);
         Stack<(InstrumentItem Item, int OuterIndex, int InnerIndex)> undoStack = new Stack<(InstrumentItem, int, int)>();
         bool hasUndo = false;
@@ -86,14 +90,14 @@ public class Program
         while (running)
         {
             PrintMenu();
-            int choice = int.Parse(Console.ReadLine()?? "");   // naive: may throw on bad input — fine for now
+            int choice = int.Parse(Console.ReadLine() ?? "");   // naive: may throw on bad input — fine for now
             switch (choice)
             {
                 case 1: AddItem(catalog); break;
                 case 2: RemoveItem(catalog, ref hasUndo, undoStack); break;
                 case 3: ListItems(catalog); break;
                 case 4: SellItem(catalog); break;
-                case 5: Renting(catalog,RentedItems); break;
+                case 5: Renting(catalog, RentedItems); break;
                 case 6: MixTapeCreator(trackRepo, mixTape); break;
                 case 7: MusicRecord(trackRepo); break;
                 case 8: await FetchLiveTrackFromApi(trackRepo); break;
@@ -102,6 +106,134 @@ public class Program
         }
 
         Log.CloseAndFlush();
+    }
+
+    private static void PrintRented(List<IRent> rentedItem)
+    {
+        Console.WriteLine("\nListing rented items...\n\n");
+        foreach (var item in rentedItem)
+        {
+            Console.WriteLine(item);
+        }
+        Console.WriteLine("\n");
+    }
+    private static void PrintRentables(List<List<InstrumentItem>> catalog)
+    {
+        Console.WriteLine("\nListing rentable items...\n\n");
+        foreach (var section in catalog)
+        {
+            foreach (var item in section)
+            {
+                if (item is IRent rentableItem && rentableItem.CanRent)
+                {
+                    Console.WriteLine(item.Describe());
+                }
+            }
+        }
+        Console.WriteLine("\n");
+    }
+    private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
+    {
+        var running = true;
+        while (running)
+        {
+
+            Console.WriteLine("\n==RENTING MANAGER==\n1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
+            int choice = int.Parse(Console.ReadLine() ?? "");
+            switch (choice)
+            {
+                case 1:
+                    PrintRentables(catalog);
+                    break;
+                case 2:
+                    PrintRented(rentedItem);
+                    break;
+                case 3:
+                    PrintRentables(catalog);
+                    Console.WriteLine("Enter the item number you wish to rent:");
+                    int rentNumber = int.Parse(Console.ReadLine() ?? "");
+
+                    foreach (var section in catalog)
+                    {
+                        try
+                        {
+                            var item = section.FirstOrDefault(i => i.Id == rentNumber);
+                            if (item == null)
+                            {
+                                throw new InstrumentNotFoundException(rentNumber);
+                            }
+                            if (item != null)
+                            {
+                                if (item is IRent rentableItem)
+                                {
+                                    rentableItem.Rent();
+                                    rentedItem.Add(rentableItem);
+                                    rentableItem.IsRented();
+                                    Console.WriteLine($"\nItem with ID {rentNumber} has been rented.\n");
+                                    return;
+                                }
+                                else if (item.AmountAvailable == 0)
+                                {
+                                    Console.WriteLine($"\nSorry, the item with ID {rentNumber} is not available for rent.\n");
+                                    return;
+                                }
+                            }
+                        }
+                        catch (MusicStoreException ex)
+                        {
+                            Log.Error("Store Error: {Message}", ex.Message);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error("Non Store Error: {Message}", ex.Message);
+                        }
+                    }
+                    break;
+                case 4:
+                    PrintRented(rentedItem);
+                    Console.WriteLine("Enter the item number you wish to return:\n");
+                    rentNumber = int.Parse(Console.ReadLine() ?? "");
+                    foreach (var section in catalog)
+                    {
+                        try
+                        {
+                            var item = section.FirstOrDefault(i => i.Id == rentNumber);
+                            if (item == null)
+                            {
+                                throw new InstrumentNotFoundException(rentNumber);
+                            }
+                            if (item != null)
+                            {
+                                if (item is IRent rentableItem)
+                                {
+                                    rentableItem.Return();
+                                    rentedItem.Remove(rentableItem);
+                                    Console.WriteLine($"\nThanks for returning item with ID {rentNumber}.\n");
+                                    return;
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
+                                    return;
+                                }
+                            }
+                        }
+                        catch (MusicStoreException ex)
+                        {
+                            Log.Error("Store Error: {Message}", ex.Message);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error("Non Store Error: {Message}", ex.Message);
+                        }
+                    }
+                    break;
+                case 0:
+                    running = false;
+                    return;
+            }
+        }
+
     }
 
     // method to parse the menu input and return the value as an integer as an human error handling 
@@ -256,7 +388,7 @@ public class Program
     private static void AddItem(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("What type of item would you like to add?\n1. Guitar\n2. Microphone\n3. Trumpet\n4. Drum\n5. Piano");
-        int itemType =  int.Parse(Console.ReadLine()?? "");
+        int itemType = int.Parse(Console.ReadLine() ?? "");
         switch (itemType)
         {
             case 1: AddGuitar(catalog); break;
@@ -270,100 +402,116 @@ public class Program
     private static void AddGuitar(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine()?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter type:");
-        string type = Console.ReadLine()?? "";
+        string type = Console.ReadLine() ?? "";
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine()?? "";
+        string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine()?? "";
+        string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter number of strings:");
-        int numberOfStrings = int.Parse(Console.ReadLine()?? "");
+        string stringsInput = Console.ReadLine() ?? "";
+        int numberOfStrings = int.TryParse(stringsInput, out int parsedStrings) ? parsedStrings : 0;
         Console.WriteLine("Is it available for rent? (y/n)");
         bool canRent = (Console.ReadLine() ?? "").ToLower() == "y";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine()?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
 
         var guitar = new Guitar(price, type, brand, model, numberOfStrings, canRent, amountAvailable);
-        catalog[0].Add(guitar); 
+        InstrumentFactory.Create(InstrumentType.Guitar, price, type, brand, model, numberOfStrings, canRent: canRent, amountAvailable: amountAvailable);
+        catalog[0].Add(guitar);
         Console.WriteLine($"Added {guitar.Brand} {guitar.Model} guitar to the catalog.\n");
     }
 
     private static void AddMicrophone(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine()?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine()?? "";
+        string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine()?? "";
+        string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter type:");
-        string type = Console.ReadLine()?? "";
+        string type = Console.ReadLine() ?? "";
         Console.WriteLine("Is it wireless? (y/n)");
         bool isWireless = (Console.ReadLine() ?? "").ToLower() == "y";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine()?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
 
         var microphone = new Microphone(price, brand, model, type, isWireless, amountAvailable);
-        catalog[1].Add(microphone); 
+        InstrumentFactory.Create(InstrumentType.Microphone, price, brand, model, type, isWireless: isWireless, amountAvailable: amountAvailable);
+        catalog[1].Add(microphone);
         Console.WriteLine($"Added {microphone.Brand} {microphone.Model} microphone to the catalog.\n");
     }
 
     private static void AddTrumpet(List<List<InstrumentItem>> catalog)
     {
-        Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine()?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine()?? "";
+        string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine()?? "";
+        string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter size:");
-        string size = Console.ReadLine()?? "";
+        string size = Console.ReadLine() ?? "";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine()?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
 
         var trumpet = new Trumpet(price, brand, model, size, amountAvailable);
-        catalog[2].Add(trumpet); 
+        InstrumentFactory.Create(InstrumentType.Trumpet, price, brand, model, size: size, amountAvailable: amountAvailable);
+        catalog[2].Add(trumpet);
         Console.WriteLine($"Added {trumpet.Brand} {trumpet.Model} trumpet to the catalog.\n");
     }
 
     private static void AddDrum(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine()?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine()?? "";
+        string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine()?? "";
+        string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter number of pieces:");
-        int numberOfPieces = int.Parse(Console.ReadLine()?? "");
+        string piecesInput = Console.ReadLine() ?? "";
+        int numberOfPieces = int.TryParse(piecesInput, out int parsedPieces) ? parsedPieces : 0;
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine()?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
         Console.WriteLine("Enter number of cymbals:");
-        int numberOfCymbals = int.Parse(Console.ReadLine()?? "");
-
+        string cymbalsInput = Console.ReadLine() ?? "";
+        int numberOfCymbals = int.TryParse(cymbalsInput, out int parsedCymbals) ? parsedCymbals : 0;
         var drum = new Drum(price, brand, model, numberOfPieces, amountAvailable, numberOfCymbals);
-        catalog[3].Add(drum); 
+
+        InstrumentFactory.Create(InstrumentType.Drums, price, brand, model, drumAmount: numberOfPieces, plateAmount: numberOfCymbals, amountAvailable: amountAvailable);
+        catalog[3].Add(drum);
         Console.WriteLine($"Added {drum.Brand} {drum.Model} drum set to the catalog.\n");
     }
 
     private static void AddPiano(List<List<InstrumentItem>> catalog)
     {
         Console.WriteLine("Enter price:");
-        int price = int.Parse(Console.ReadLine()?? "");
+        string priceInput = Console.ReadLine() ?? "";
+        int price = int.TryParse(priceInput, out int parsedPrice) ? parsedPrice : 0;
         Console.WriteLine("Enter type:");
-        string type = Console.ReadLine()?? "";
+        string type = Console.ReadLine() ?? "";
         Console.WriteLine("Enter brand:");
-        string brand = Console.ReadLine()?? "";
+        string brand = Console.ReadLine() ?? "";
         Console.WriteLine("Enter model:");
-        string model = Console.ReadLine()?? "";
+        string model = Console.ReadLine() ?? "";
         Console.WriteLine("Enter amount available:");
-        int amountAvailable = int.Parse(Console.ReadLine()?? "");
+        string amountInput = Console.ReadLine() ?? "";
+        int amountAvailable = int.TryParse(amountInput, out int parsedAmount) ? parsedAmount : 0;
         Console.WriteLine("Is it available for rent? (y/n)");
         bool canRent = (Console.ReadLine() ?? "").ToLower() == "y";
 
-
         var piano = new Piano(price, type, brand, model, canRent, amountAvailable);
+        InstrumentFactory.Create(InstrumentType.Piano, price, type, brand, model, canRent: canRent, amountAvailable: amountAvailable);
         catalog[4].Add(piano);
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
     }
@@ -380,7 +528,7 @@ public class Program
         3: List all (Artists, Genres) available
         4: Go back
         """;
-    
+
     private const string MR_LIST_ATTRIBUTES =
         """
         1: List available artists
@@ -425,16 +573,17 @@ public class Program
 
             Track? track = trackId is not null ? trackRepo.GetById((int)trackId) : null;
 
-            if(track is not null)
+            if (track is not null)
             {
                 track.PlaceTrack(track.CatalogSpot.Row, track.CatalogSpot.Col);
                 track.PrintLocation();
                 return;
             }
-                Console.WriteLine("Track not found"); return;
+            Console.WriteLine("Track not found"); return;
 
-            
-        }catch(Exception ex)
+
+        }
+        catch (Exception ex)
         {
             Log.Warning("Something went wrong locating the track. {Message}", ex.Message);
         }
@@ -445,8 +594,9 @@ public class Program
         Console.Clear();
         Console.WriteLine("Input Music record key:");
         int? recordIsrc = int.TryParse(Console.ReadLine(), out int result) ? result : null;
-        if (recordIsrc is null) {
-            Log.Warning("Invalid input. Going back.}"); 
+        if (recordIsrc is null)
+        {
+            Log.Warning("Invalid input. Going back.}");
             return;
         }
         Track? track = trackRepo.GetById((int)recordIsrc);
@@ -494,74 +644,76 @@ public class Program
         while (running)
         {
             Console.WriteLine("1. Remove item");
-            if(hasUndo == true)
+            if (hasUndo == true)
                 Console.WriteLine("2. Undo Removal");
             Console.WriteLine("0. Exit\n");
-            int choice = int.Parse(Console.ReadLine()?? "");
-            switch ((choice,hasUndo))
+            int choice = int.Parse(Console.ReadLine() ?? "");
+            switch ((choice, hasUndo))
             {
-                case (1, _): 
+                case (1, _):
                     Console.WriteLine("Enter the ID of the item you want to sell:");
-                    int id = int.Parse(Console.ReadLine()?? "");
-                    for(int outerIndex = 0; outerIndex < catalog.Count; outerIndex++)
+                    int id = int.Parse(Console.ReadLine() ?? "");
+                    for (int outerIndex = 0; outerIndex < catalog.Count; outerIndex++)
                     {
                         var subList = catalog[outerIndex];
                         int innerIndex = subList.FindIndex(i => i.Id == id);
-                        if (innerIndex != -1) 
+                        if (innerIndex != -1)
                         {
                             InstrumentItem removedItem = subList[innerIndex];
                             undoStack.Push((removedItem, outerIndex, innerIndex));
                             subList.RemoveAt(innerIndex);
                             hasUndo = true;
                             Console.WriteLine($"Removed {removedItem.Brand} {removedItem.Model} successfully.");
-                            break; 
+                            break;
                         }
                     }
                     Console.WriteLine($"\nYou have removed item with ID {id}.\n");
-                break;
-                case (2, true): 
+                    break;
+                case (2, true):
                     Console.WriteLine("Reverting action...");
                     if (undoStack.Count > 0)
-                        {var (item, outerIndex, innerIndex) = undoStack.Pop();
-                    if (outerIndex >= 0 && outerIndex < catalog.Count)
                     {
-                        var subList = catalog[outerIndex];
-
-                        if (innerIndex >= 0 && innerIndex <= subList.Count)
+                        var (item, outerIndex, innerIndex) = undoStack.Pop();
+                        if (outerIndex >= 0 && outerIndex < catalog.Count)
                         {
-                            subList.Insert(innerIndex, item);
-                            Console.WriteLine($"Undo successful: Restored {item.Brand} {item.Model} to catalog.");
+                            var subList = catalog[outerIndex];
+
+                            if (innerIndex >= 0 && innerIndex <= subList.Count)
+                            {
+                                subList.Insert(innerIndex, item);
+                                Console.WriteLine($"Undo successful: Restored {item.Brand} {item.Model} to catalog.");
+                            }
+                            hasUndo = false;
                         }
-                        hasUndo=false;
+                        else
+                        {
+                            Console.WriteLine("Error: The original category section no longer exists.");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("Error: The original category section no longer exists.");
+                        Console.WriteLine("Nothing to undo!");
                     }
-                }
-                else
-                {
-                    Console.WriteLine("Nothing to undo!");
-                }
-                    
-                break;
-                case (0, _): 
+
+                    break;
+                case (0, _):
                     running = false;
-                break;
-                    
+                    break;
+
             }
-            
+
         }
     }
 
-    
+
     private static void ListItems(List<List<InstrumentItem>> catalog)
     {
         List<string> sectionNames = new List<string> { "Guitars", "Pianos", "Trumpets", "Microphone", "Drums" };
         var running = true;
-        while (running){
-        Console.WriteLine("1. ORDER BY Brand\n2. ORDER BY Price\n3. List all items\n0. Exit\n");
-        int choice = int.Parse(Console.ReadLine()?? "");
+        while (running)
+        {
+            Console.WriteLine("1. ORDER BY Brand\n2. ORDER BY Price\n3. List all items\n0. Exit\n");
+            int choice = int.Parse(Console.ReadLine() ?? "");
             switch (choice)
             {
                 case 1:
@@ -577,24 +729,24 @@ public class Program
                         Console.WriteLine("\n");
                     }
                     Console.WriteLine("\n");
-                break;
+                    break;
                 case 2:
-                Console.WriteLine("Insert a budget estimate\n");
-                int priceRange = int.Parse(Console.ReadLine()?? "");
-                   Console.WriteLine("\nListing items...\n\n");
+                    Console.WriteLine("Insert a budget estimate\n");
+                    int priceRange = int.Parse(Console.ReadLine() ?? "");
+                    Console.WriteLine("\nListing items...\n\n");
                     foreach (var section in catalog)
                     {
                         Console.WriteLine($"=== In {sectionNames[catalog.IndexOf(section)]} ===");
                         var query = section.OrderBy(price => price.Price);
                         foreach (var item in query)
                         {
-                            if(item.Price < priceRange)
+                            if (item.Price < priceRange)
                                 Console.WriteLine(item.Describe());
                         }
                         Console.WriteLine("\n");
                     }
                     Console.WriteLine("\n");
-                break;
+                    break;
                 case 3:
                     Console.WriteLine("\nListing items...\n\n");
                     foreach (var section in catalog)
@@ -607,24 +759,25 @@ public class Program
                         Console.WriteLine("\n");
                     }
                     Console.WriteLine("\n");
-                break;
+                    break;
                 case 0:
-                running = false;
-                break;
-        }
+                    running = false;
+                    break;
+            }
         }
     }
 
     private static void SellItem(List<List<InstrumentItem>> catalog)
     {
-                Console.WriteLine("Enter the ID of the item you want to sell:");
-        int id = int.Parse(Console.ReadLine()?? "");
+        Console.WriteLine("Enter the ID of the item you want to sell:");
+        int id = int.Parse(Console.ReadLine() ?? "");
         foreach (var section in catalog)
         {
             var item = section.FirstOrDefault(i => i.Id == id);
-            if (item != null && item.AmountAvailable >= 1) 
+            if (item != null && item.AmountAvailable >= 1)
                 item.AmountAvailable--;
-            if (item == null || item.AmountAvailable == 0){
+            if (item == null || item.AmountAvailable == 0)
+            {
                 Console.WriteLine($"\nI'm sorry, the item is not currently available.\n");
                 return;
             }
