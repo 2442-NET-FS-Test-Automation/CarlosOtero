@@ -60,4 +60,40 @@ public class InMemoryTrackRepository : ITrackRepository
     {
         return tracks.ToDictionary(x => x.ISRC);
     }
+
+    private HashSet<string>? ListAtrributes(int selection)
+    {
+        try
+        {
+            if (selection == 1)
+            {
+                HashSet<string> trackArtists = [];
+                for (int i = 0; i < _tracks.Count; i++)
+                {
+                    trackArtists.Add(_tracks[i].Artist);
+                }
+                return trackArtists;
+
+            }
+            else
+            {
+                HashSet<string> trackGenres = Enum.GetNames<TrackGenre>().ToHashSet();
+                return trackGenres;
+            }
+        }catch(Exception ex)
+        {
+            Log.Error("Error with message: {Message}", ex.Message);
+            return null;
+        }
+    }
+
+    public void ReturnListedAttributes(int selection)
+    {
+        HashSet<string>? set = ListAtrributes(selection);
+
+        if (set is null) {Log.Warning("Data could not be fetched."); return; }
+
+        Console.WriteLine(string.Join(Environment.NewLine, set));
+
+    }
 }
