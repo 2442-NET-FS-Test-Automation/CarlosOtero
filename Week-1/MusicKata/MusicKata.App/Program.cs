@@ -1,11 +1,18 @@
 ﻿using MusicKata.Domain;
 using Serilog;
 
+using System.Text.RegularExpressions;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+
 namespace MusicKata.App;
 
 public class Program
 {
-    public static void Main()
+
+    private static readonly HttpClient _httpClient = new HttpClient();
+    public static async Task Main()
     {
         //logger to register from intital run
         Log.Logger = new LoggerConfiguration()
@@ -71,6 +78,8 @@ public class Program
         ITrackRepository trackRepo = new InMemoryTrackRepository();
         MixTapeQueue mixTape = new MixTapeQueue();
 
+
+
         Log.Information("Music Store Manager started with {TrackCount} seeded tracks", trackRepo.GetAll().Count);
 
         var running = true;
@@ -87,6 +96,7 @@ public class Program
                 case 5: Renting(catalog,RentedItems); break;
                 case 6: MixTapeCreator(trackRepo, mixTape); break;
                 case 7: MusicRecord(trackRepo); break;
+                case 8: await FetchLiveTrackFromApi(trackRepo); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
@@ -240,7 +250,7 @@ public class Program
     private static void PrintMenu()
     {
         Console.WriteLine("\n=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n7. Music Records\n0. Exit\n");
+        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n7. Music Records\n8. Fetch Online Track Data\n0. Exit\n");
     }
 
     private static void AddItem(List<List<InstrumentItem>> catalog)
@@ -365,8 +375,8 @@ public class Program
     /// </summary>
     private const string MUSIC_RECORD_MENU =
         """
-        1: Locate by name
-        2: Get music records information by key
+        1: Locate by ID
+        2: Get music records information by ID
         3: List all (Artists, Genres) available
         4: Go back
         """;
@@ -731,4 +741,76 @@ public class Program
     {
         throw new NotImplementedException();
     }
+
+    #region Api usage
+    private static async Task FetchLiveTrackFromApi(ITrackRepository trackRepo)
+    {
+        Console.WriteLine("Enter TheAudioDB Track ID to search (numbers only):");
+        string input = Console.ReadLine() ?? "";
+
+        Regex numericRegex = new Regex(@"^\d+$");
+        if (!numericRegex.IsMatch(input))
+        {
+            Console.WriteLine("Rejected entry: The identifier must contain only numbers.");
+            Log.Warning("API input rejected due to invalid format: {Input}", input);
+            return;
+        }
+
+        try
+        {
+            Log.Information("Searching for track ID {Id} in TheAudioDB...", input);
+            
+            HttpResponseMessage response = await _httpClient.GetAsync($"https://www.theaudiodb.com/api/v1/json/123/track.php?h={input}");
+            response.EnsureSuccessStatusCode();
+
+            string jsonResponse = await response.Content.ReadAsStringAsync();
+            
+            using (JsonDocument doc = JsonDocument.Parse(jsonResponse))
+            {
+                JsonElement root = doc.RootElement;
+                if (root.TryGetProperty("track", out JsonElement trackArray) && trackArray.GetArrayLength() > 0)
+                {
+                    JsonElement trackData = trackArray[0];
+                    string title = trackData.GetProperty("strTrack").GetString() ?? "Unknown";
+                    string artist = trackData.GetProperty("strArtist").GetString() ?? "Unknown";
+                    int duration = int.TryParse(trackData.GetProperty("intDuration").GetString() ?? "0", out int seconds) ? seconds : 0;
+                    string hasGenre = trackData.GetProperty("strGenre").GetString() ?? "Unknown";
+                    TrackGenre genre = new();
+                    if (Enum.TryParse<TrackGenre>(hasGenre, ignoreCase: true, out TrackGenre resultGenre))
+                    {
+                        genre = resultGenre;
+                    }
+                    else
+                    {
+                        genre = TrackGenre.Classical;
+                    }
+                    
+                    Console.WriteLine($"\nTrack Found!");
+                    Console.WriteLine($"Title: {title} | Artist: {artist}\n");
+                    
+                    Track track = new Track(int.Parse(input), title, artist, duration, genre, new GridPosition(1,1));
+
+                    trackRepo.Add(track);
+
+                }
+                else
+                {
+                    Console.WriteLine("The API did not find any tracks with that ID.");
+                }
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Log.Error("Connection error when querying TheAudioDB: {Message}", ex.Message);
+            Console.WriteLine($"\nCould not contact server: {ex.Message}. The application continues to run.\n");
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Unexpected error processing the API: {Message}", ex.Message);
+            Console.WriteLine("An unexpected error occurred. Try again.");
+        }
+    }
+
+    #endregion Api usage
+
 }
