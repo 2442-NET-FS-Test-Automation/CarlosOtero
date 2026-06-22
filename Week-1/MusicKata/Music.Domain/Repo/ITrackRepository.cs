@@ -4,7 +4,8 @@ public interface ITrackRepository
 {
     void Add(Track track);
     Track GetById(int id);
-    List<Track> GetAll();
+    IEnumerable<Track> GetAll();
+    IEnumerable<Track> Find(Predicate<Track> condition);
 
     void ReturnListedAttributes(int selection);
 }

@@ -81,10 +81,11 @@ public class Program
         List<IRent> RentedItems = new List<IRent>();
         ITrackRepository trackRepo = new InMemoryTrackRepository();
         MixTapeQueue mixTape = new MixTapeQueue();
+        WorkingBin<InstrumentItem> maintenanceQueue = new WorkingBin<InstrumentItem>();
 
 
 
-        Log.Information("Music Store Manager started with {TrackCount} seeded tracks", trackRepo.GetAll().Count);
+        Log.Information("Music Store Manager started with {TrackCount} seeded tracks", trackRepo.GetAll().Count());
 
         var running = true;
         while (running)
@@ -101,6 +102,7 @@ public class Program
                 case 6: MixTapeCreator(trackRepo, mixTape); break;
                 case 7: MusicRecord(trackRepo); break;
                 case 8: await FetchLiveTrackFromApi(trackRepo); break;
+                case 9: MaintenanceManager(catalog, maintenanceQueue); break;
                 case 0: Console.WriteLine("Exiting..."); running = false; break;
             }
         }
@@ -382,7 +384,7 @@ public class Program
     private static void PrintMenu()
     {
         Console.WriteLine("\n=== Welcome to the Music Store Manager! Here are your options: ===\n");
-        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n7. Music Records\n8. Fetch Online Track Data\n0. Exit\n");
+        Console.WriteLine("1. Add item\n2. Remove item\n3. List items\n4. Sell item\n5. Renting Service\n6. Mixtape Creator\n7. Music Records\n8. Fetch Online Track Data\n9. Maintenance Manager\n \n0. Exit\n");
     }
 
     private static void AddItem(List<List<InstrumentItem>> catalog)
@@ -526,7 +528,8 @@ public class Program
         1: Locate by ID
         2: Get music records information by ID
         3: List all (Artists, Genres) available
-        4: Go back
+        4: Smart search
+        0: Go back
         """;
 
     private const string MR_LIST_ATTRIBUTES =
@@ -556,6 +559,9 @@ public class Program
                 ListAtrributes(trackRepo);
                 break;
             case 4:
+                SmartTrackSearch(trackRepo);
+                break;
+            case 0:
             default:
                 return;
         }
@@ -786,115 +792,6 @@ public class Program
         Console.WriteLine($"\nYou have sold item with ID {id}.");
     }
 
-    private static void Renting(List<List<InstrumentItem>> catalog, List<IRent> rentedItem)
-    {
-        var running = true;
-        while (running)
-        {
-            
-        Console.WriteLine("\n==RENTING MANAGER==\n1- List rentable items\n2- List rented items\n3- Rent by ID\n4- Return by ID\n0- Back to main menu");
-        int choice = int.Parse(Console.ReadLine()?? "");
-        switch (choice)       {
-            case 1:
-                PrintRentables(catalog);
-            break;
-            case 2: 
-                PrintRented(rentedItem);
-            break;
-            case 3: 
-                PrintRentables(catalog);
-                Console.WriteLine("Enter the item number you wish to rent:");
-                int rentNumber = int.Parse(Console.ReadLine()?? "");
-                foreach (var section in catalog)
-                {
-                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
-                    if (item != null)
-                    {
-                        if (item is IRent rentableItem)
-                        {
-                            rentableItem.Rent();
-                            rentedItem.Add(rentableItem);
-                            rentableItem.IsRented();
-                            Console.WriteLine($"\nItem with ID {rentNumber} has been rented.\n");
-                            return;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"\nSorry, the item with ID {rentNumber} is not available for rent.\n");
-                            return;
-                        }
-                    }
-                    
-                }
-                Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
-            break;
-            case 4: 
-                PrintRented(rentedItem);
-                Console.WriteLine("Enter the item number you wish to return:\n");
-                rentNumber = int.Parse(Console.ReadLine()?? "");
-                foreach (var section in catalog)
-                {
-                    var item = section.FirstOrDefault(i => i.Id == rentNumber);
-                    if (item != null)
-                    {
-                        if (item is IRent rentableItem)
-                        {
-                            rentableItem.Return();
-                            rentedItem.Remove(rentableItem);
-                            Console.WriteLine($"\nThanks for returning item with ID {rentNumber}.\n");
-                            return;
-                        }
-                        else
-                        {   
-                            Console.WriteLine($"\nSorry, no item with ID {rentNumber} was found.\n");
-                            return;
-                        }
-                    }
-                }
-            break;
-            case 0: 
-            running = false;
-            return;
-        }
-        }
-       
-    }
-
-    private static void PrintRentables(List<List<InstrumentItem>> catalog)
-    {
-        Console.WriteLine("\nListing rentable items...\n\n");
-                foreach (var section in catalog)
-                {
-                    foreach (var item in section)
-                    {
-                        if (item is IRent rentableItem && rentableItem.CanRent)
-                        {
-                            Console.WriteLine(item.Describe());
-                        }
-                    }
-                }
-        Console.WriteLine("\n");
-    }
-
-    private static void PrintRented(List<IRent> rentedItem)
-    {
-        Console.WriteLine("\nListing rented items...\n\n");
-        foreach (var item in rentedItem)
-            {
-                Console.WriteLine(item);
-            }
-        Console.WriteLine("\n");
-    }
-
-    private static void MixtapeCreator()
-    {
-        throw new NotImplementedException();
-    }
-    private static void MusicRecords()
-    {
-        throw new NotImplementedException();
-    }
-
     #region Api usage
     private static async Task FetchLiveTrackFromApi(ITrackRepository trackRepo)
     {
@@ -965,5 +862,230 @@ public class Program
     }
 
     #endregion Api usage
+
+    #region LastMinute implementations
+    
+    private static void MaintenanceManager(List<List<InstrumentItem>> catalog, WorkingBin<InstrumentItem> maintenanceQueue)
+    {
+        var running = true;
+        while (running)
+        {
+            Console.WriteLine("\n== MAINTENANCE & RESTOCK QUEUE ==");
+            Console.WriteLine("1- Enqueue item for maintenance");
+            Console.WriteLine("2- Prioritize urgent item (Move to front)");
+            Console.WriteLine("3- View current queue");
+            Console.WriteLine("0- Back to main menu");
+
+            if (!TryParseMenuInput(Console.ReadLine(), out int choice)) continue;
+
+            switch (choice)
+            {
+                case 1:
+                    Console.WriteLine("Enter the ID of the item needing maintenance:");
+                    if (TryParseMenuInput(Console.ReadLine(), out int idToAdd))
+                    {
+                        try
+                        {
+                            InstrumentItem? foundItem = null;
+                            foreach (List<InstrumentItem> section in catalog)
+                            {
+                                foreach (InstrumentItem item in section)
+                                {
+                                    if (item.Id == idToAdd)
+                                    {
+                                        foundItem = item;
+                                        break;
+                                    }
+                                }
+                                if (foundItem != null) break;
+                            }
+
+                            if (foundItem == null)
+                            {
+                                throw new MusicStoreException($"Item with ID {idToAdd} does not exist in the catalog.");
+                            }
+
+                            maintenanceQueue.Add(foundItem);
+                            Console.WriteLine($"Added {foundItem.Brand} to the maintenance queue.");
+                        }
+                        catch (MusicStoreException ex)
+                        {
+                            Log.Warning("Maintenance enqueue failed: {Message}", ex.Message);
+                            Console.WriteLine($"\nAction failed: {ex.Message}\n");
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error("Unexpected error in maintenance enqueue: {Message}", ex.Message);
+                            Console.WriteLine("\nAn unexpected system error occurred.\n");
+                        }
+                        finally
+                        {
+                            Console.WriteLine("--- Enqueue operation finished ---");
+                        }
+                    }
+                    break;
+
+                case 2:
+                    Console.WriteLine("Enter the ID of the URGENT item to move to the front:");
+                    if (TryParseMenuInput(Console.ReadLine(), out int urgentId))
+                    {
+                        try
+                        {
+                            bool success = maintenanceQueue.PromoteToFront(item => item.Id == urgentId);
+                            
+                            if (!success)
+                            {
+                                throw new MusicStoreException($"Item ID {urgentId} is not currently in the maintenance queue.");
+                            }
+                            
+                            Console.WriteLine("Item prioritized successfully! It will be processed next.");
+                        }
+                        catch (MusicStoreException ex)
+                        {
+                            Log.Warning("Failed to prioritize item: {Message}", ex.Message);
+                            Console.WriteLine($"\nCannot prioritize: {ex.Message}\n");
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error("Unexpected error prioritizing item: {Message}", ex.Message);
+                            Console.WriteLine("\nAn unexpected system error occurred.\n");
+                        }
+                        finally
+                        {
+                            Console.WriteLine("--- Prioritize operation finished ---");
+                        }
+                    }
+                    break;
+
+                case 3:
+                    Console.WriteLine("\n--- Pending Maintenance ---");
+                    foreach (var item in maintenanceQueue.GetAll())
+                    {
+                        Console.WriteLine($"[ID: {item.Id}] {item.Brand} {item.Model}");
+                    }
+                    break;
+
+                case 0:
+                    running = false;
+                    break;
+            }
+        }
+    }
+
+
+    private static void SmartTrackSearch(ITrackRepository trackRepo)
+    {
+        var running = true;
+        while (running)
+        {
+            Console.WriteLine("\n== SMART TRACK SEARCH ==");
+            Console.WriteLine("1- Find tracks by exact Artist");
+            Console.WriteLine("2- Find LONG tracks (over 5 minutes)");
+            Console.WriteLine("3- Find tracks by Genre");
+            Console.WriteLine("0- Back to main menu");
+
+            if (!TryParseMenuInput(Console.ReadLine(), out int choice)) continue;
+
+            switch (choice)
+            {
+                case 1:
+                    Console.WriteLine("Enter Artist name:");
+                    string artistInput = Console.ReadLine() ?? "";
+                    
+                    try
+                    {
+                        if (string.IsNullOrWhiteSpace(artistInput))
+                        {
+                            throw new MusicStoreException("Artist name cannot be empty.");
+                        }
+
+                        IEnumerable<Track> artistTracks = trackRepo.Find(t => t.Artist.Equals(artistInput, StringComparison.OrdinalIgnoreCase));
+                        PrintSearchResults(artistTracks);
+                    }
+                    catch (MusicStoreException ex)
+                    {
+                        Log.Warning("Search validation error: {Message}", ex.Message);
+                        Console.WriteLine($"\nInvalid search: {ex.Message}\n");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Unexpected search error: {Message}", ex.Message);
+                        Console.WriteLine("\nAn unexpected error occurred during the search.\n");
+                    }
+                    finally
+                    {
+                        Console.WriteLine("--- Search operation finished ---");
+                    }
+                    break;
+
+                case 2:
+                    try
+                    {
+                        IEnumerable<Track> longTracks = trackRepo.Find(t => t.DurationSeconds > 300);
+                        PrintSearchResults(longTracks);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Error executing long tracks search: {Message}", ex.Message);
+                        Console.WriteLine("\nFailed to retrieve long tracks.\n");
+                    }
+                    finally
+                    {
+                        Console.WriteLine("--- Search operation finished ---");
+                    }
+                    break;
+
+                case 3:
+                    Console.WriteLine("Enter Genre (Rock, Pop, Jazz, Classical, HipHop, Electronic):");
+                    try
+                    {
+                        if (Enum.TryParse(Console.ReadLine(), true, out TrackGenre selectedGenre))
+                        {
+                            IEnumerable<Track> genreTracks = trackRepo.Find(t => t.Genre == selectedGenre);
+                            PrintSearchResults(genreTracks);
+                        }
+                        else
+                        {
+                            throw new MusicStoreException("The genre provided is not recognized by the system.");
+                        }
+                    }
+                    catch (MusicStoreException ex)
+                    {
+                        Log.Warning("Genre search error: {Message}", ex.Message);
+                        Console.WriteLine($"\nSearch failed: {ex.Message}\n");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Unexpected genre search error: {Message}", ex.Message);
+                        Console.WriteLine("\nAn unexpected error occurred.\n");
+                    }
+                    finally
+                    {
+                        Console.WriteLine("--- Search operation finished ---");
+                    }
+                    break;
+
+                case 0:
+                    running = false;
+                    break;
+            }
+        }
+    }
+
+    private static void PrintSearchResults(IEnumerable<Track> results)
+    {
+        Console.WriteLine("\n-- Results --");
+        bool foundAny = false;
+        
+        foreach (Track track in results)
+        {
+            Console.WriteLine(track.Describe());
+            foundAny = true;
+        }
+        
+        if (!foundAny) Console.WriteLine("No tracks matched your criteria.");
+        Console.WriteLine("-------------\n");
+    }
+    #endregion LastMinute implementations
 
 }

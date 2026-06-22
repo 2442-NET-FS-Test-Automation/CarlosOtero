@@ -43,7 +43,13 @@ public class InMemoryTrackRepository : ITrackRepository
         Log.Information("Added track {Title} - ISRC: {ISRC}", track.Title, track.ISRC);
     }
 
-    public List<Track> GetAll() => _tracks.ToList();
+    public IEnumerable<Track> GetAll()
+    {
+        foreach (Track track in _tracks)
+        {
+            yield return track;
+        }
+    }
 
     public Track GetById(int id)
     {
@@ -54,6 +60,17 @@ public class InMemoryTrackRepository : ITrackRepository
 
         Log.Warning("Track lookup failed for id {Id}", id);
         throw new TrackNotFoundException(id);
+    }
+
+    public IEnumerable<Track> Find(Predicate<Track> condition)
+    {
+        foreach (var track in _tracks)
+        {
+            if (condition(track))
+            {
+                yield return track;
+            }
+        }
     }
 
     public Dictionary<int, Track> ParseToDictionary(List<Track> tracks)
