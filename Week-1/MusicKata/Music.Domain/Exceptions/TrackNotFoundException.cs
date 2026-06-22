@@ -1,6 +1,6 @@
 namespace MusicKata.Domain;
 
-public class TrackNotFoundException : MusicStoreException
+public sealed class TrackNotFoundException : MusicStoreException
 {
     public int Id { get; }
 
