@@ -17,52 +17,56 @@ public class Program
         List<List<InstrumentItem>> catalog = new List<List<InstrumentItem>> { };
 
         List<InstrumentItem> guitarSection = new List<InstrumentItem>
-            {
-                new Guitar(1500, "Electric", "Fender", "Stratocaster", 6, true, 0),
-                new Guitar(950, "Acoustic", "Taylor", "214aa", 6, false, 3),
-                new Guitar(1200, "Acoustic", "Gibson", "J-45", 6, false, 2),
-                new Guitar(920, "Acoustic", "Taylor", "214bb", 6, true, 5),
-                new Guitar(1000, "Bass", "Ibanez", "SR500", 4, true, 4),
-                new Guitar(1800, "Electric", "PRS", "Custom 24", 6, true, 1),
-                new Guitar(900, "Acoustic", "Taylor", "214ce", 6, false, 5)
-            };
+{
+    InstrumentFactory.Create(InstrumentType.Guitar, 1500, "Electric", "Fender", "Stratocaster", 6, canRent: true, amountAvailable: 0),
+    InstrumentFactory.Create(InstrumentType.Guitar, 950, "Acoustic", "Taylor", "214aa", 6, canRent:false,amountAvailable: 3),
+    InstrumentFactory.Create(InstrumentType.Guitar, 1200, "Acoustic", "Gibson", "J-45", 6, canRent:false,amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Guitar, 920, "Acoustic", "Taylor", "214bb", 6, canRent:true,amountAvailable: 5),
+    InstrumentFactory.Create(InstrumentType.Guitar, 1000, "Bass", "Ibanez", "SR500", 4, canRent:true,amountAvailable: 4),
+    InstrumentFactory.Create(InstrumentType.Guitar, 1800, "Electric", "PRS", "Custom 24", 6, canRent:true,amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Guitar, 900, "Acoustic", "Taylor", "214ce", 6, canRent:false,amountAvailable: 5)
+};
         catalog.Add(guitarSection);
+
         List<InstrumentItem> pianoSection = new List<InstrumentItem>
-        {
-                new Piano(3000, "Grand", "Steinway", "Model D", true, 1),
-                new Piano(2500, "Upright", "Yamaha", "U3", true, 2),
-                new Piano(2000, "Digital", "Roland", "FP-90X", false, 4),
-                new Piano(3000, "Grand", "Steinway", "Model A", true, 2),
-                new Piano(3500, "Baby Grand", "Kawai", "GL-10", true, 1),
-                new Piano(4000, "Concert Grand", "Bösendorfer", "280VC", true, 1),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Piano, 3000, "Grand", "Steinway", "Model D", canRent:true,amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Piano, 2500, "Upright", "Yamaha", "U3", canRent:true,amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Piano, 2000, "Digital", "Roland", "FP-90X", canRent:false,amountAvailable: 4),
+    InstrumentFactory.Create(InstrumentType.Piano, 3000, "Grand", "Steinway", "Model A", canRent:true,amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Piano, 3500, "Baby Grand", "Kawai", "GL-10", canRent:true,amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Piano, 4000, "Concert Grand", "Bösendorfer", "280VC", canRent:true,amountAvailable: 1)
+};
         catalog.Add(pianoSection);
+
         List<InstrumentItem> trumpetSection = new List<InstrumentItem>
-        {
-                new Trumpet(2000, "Bach", "Stradivarius", "BBb", 2),
-                new Trumpet(1500, "Yamaha", "Xeno", "YTR-8335RS", 3),
-                new Trumpet(1800, "Conn", "Stellavox", "52B", 1),
-                new Trumpet(2200, "Getzen", "Eterna", "590S", 2),
-                new Trumpet(2500, "Schilke", "B1", "Bb/A", 1),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Trumpet, 2000, "Bach", "Stradivarius", "BBb", 2),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 1500, "Yamaha", "Xeno", "YTR-8335RS", 3),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 1800, "Conn", "Stellavox", "52B", 1),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 2200, "Getzen", "Eterna", "590S", 2),
+    InstrumentFactory.Create(InstrumentType.Trumpet, 2500, "Schilke", "B1", "Bb/A", 1)
+};
         catalog.Add(trumpetSection);
+
         List<InstrumentItem> microphoneSection = new List<InstrumentItem>
-        {
-                new Microphone(500, "Shure", "SM58", "Dynamic", false, 10),
-                new Microphone(800, "Neumann", "U87", "Condenser", true, 5),
-                new Microphone(300, "AKG", "C214", "Condenser", false, 7),
-                new Microphone(600, "Sennheiser", "e935", "Dynamic", false, 8),
-                new Microphone(400, "Audio-Technica", "AT2020", "Condenser", true, 6),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Microphone, 500, "Shure", "SM58", "Dynamic", isWireless:false, amountAvailable:10),
+    InstrumentFactory.Create(InstrumentType.Microphone, 800, "Neumann", "U87", "Condenser", isWireless:true, amountAvailable:5),
+    InstrumentFactory.Create(InstrumentType.Microphone, 300, "AKG", "C214", "Condenser", isWireless:false, amountAvailable:7),
+    InstrumentFactory.Create(InstrumentType.Microphone, 600, "Sennheiser", "e935", "Dynamic", isWireless:false, amountAvailable:8),
+    InstrumentFactory.Create(InstrumentType.Microphone, 400, "Audio-Technica", "AT2020", "Condenser", isWireless:true, amountAvailable:6)
+};
         catalog.Add(microphoneSection);
+
         List<InstrumentItem> drumSection = new List<InstrumentItem>
-        {
-                new Drum(1500, "Yamaha", "Masterworks", 3, 5, 2),
-                new Drum(1200, "Pearl", "Export", 5, 10, 3),
-                new Drum(2000, "Tama", "Starclassic", 4, 7, 4),
-                new Drum(1800, "Ludwig", "Breakbeats", 2, 4, 1),
-                new Drum(2500, "Gretsch", "Renown", 6, 8, 5),
-        };
+{
+    InstrumentFactory.Create(InstrumentType.Drums, 1500, "Yamaha", "Masterworks", drumAmount: 3, plateAmount: 5, amountAvailable: 2),
+    InstrumentFactory.Create(InstrumentType.Drums, 1200, "Pearl", "Export", drumAmount: 5, plateAmount: 10, amountAvailable: 3),
+    InstrumentFactory.Create(InstrumentType.Drums, 2000, "Tama", "Starclassic", drumAmount: 4, plateAmount: 7, amountAvailable: 4),
+    InstrumentFactory.Create(InstrumentType.Drums, 1800, "Ludwig", "Breakbeats", drumAmount: 2, plateAmount: 4, amountAvailable: 1),
+    InstrumentFactory.Create(InstrumentType.Drums, 2500, "Gretsch", "Renown", drumAmount: 6, plateAmount: 8, amountAvailable: 5)
+};
         catalog.Add(drumSection);
         Stack<(InstrumentItem Item, int OuterIndex, int InnerIndex)> undoStack = new Stack<(InstrumentItem, int, int)>();
         bool hasUndo = false;
@@ -164,7 +168,8 @@ public class Program
                                     return;
                                 }
                             }
-                        }catch (MusicStoreException ex)
+                        }
+                        catch (MusicStoreException ex)
                         {
                             Log.Error("Store Error: {Message}", ex.Message);
                         }
@@ -402,6 +407,7 @@ public class Program
         int amountAvailable = int.Parse(Console.ReadLine() ?? "");
 
         var guitar = new Guitar(price, type, brand, model, numberOfStrings, canRent, amountAvailable);
+        InstrumentFactory.Create(InstrumentType.Guitar, price, type, brand, model, numberOfStrings, canRent: canRent, amountAvailable: amountAvailable);
         catalog[0].Add(guitar);
         Console.WriteLine($"Added {guitar.Brand} {guitar.Model} guitar to the catalog.\n");
     }
@@ -422,6 +428,7 @@ public class Program
         int amountAvailable = int.Parse(Console.ReadLine() ?? "");
 
         var microphone = new Microphone(price, brand, model, type, isWireless, amountAvailable);
+        InstrumentFactory.Create(InstrumentType.Microphone, price, brand, model, type, isWireless:isWireless, amountAvailable: amountAvailable);
         catalog[1].Add(microphone);
         Console.WriteLine($"Added {microphone.Brand} {microphone.Model} microphone to the catalog.\n");
     }
@@ -440,6 +447,7 @@ public class Program
         int amountAvailable = int.Parse(Console.ReadLine() ?? "");
 
         var trumpet = new Trumpet(price, brand, model, size, amountAvailable);
+        InstrumentFactory.Create(InstrumentType.Trumpet, price, brand, model, size: size, amountAvailable: amountAvailable);
         catalog[2].Add(trumpet);
         Console.WriteLine($"Added {trumpet.Brand} {trumpet.Model} trumpet to the catalog.\n");
     }
@@ -460,6 +468,7 @@ public class Program
         int numberOfCymbals = int.Parse(Console.ReadLine() ?? "");
 
         var drum = new Drum(price, brand, model, numberOfPieces, amountAvailable, numberOfCymbals);
+        InstrumentFactory.Create(InstrumentType.Drums, price, brand, model, drumAmount:numberOfPieces, plateAmount:numberOfCymbals, amountAvailable:amountAvailable);
         catalog[3].Add(drum);
         Console.WriteLine($"Added {drum.Brand} {drum.Model} drum set to the catalog.\n");
     }
@@ -481,6 +490,7 @@ public class Program
 
 
         var piano = new Piano(price, type, brand, model, canRent, amountAvailable);
+        InstrumentFactory.Create(InstrumentType.Piano, price, type, brand, model, canRent:canRent, amountAvailable: amountAvailable);
         catalog[4].Add(piano);
         Console.WriteLine($"Added {piano.Brand} {piano.Model} piano to the catalog.\n");
     }
