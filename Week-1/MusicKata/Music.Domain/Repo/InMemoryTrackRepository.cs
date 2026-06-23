@@ -1,0 +1,116 @@
+using Serilog;
+
+namespace MusicKata.Domain;
+
+public readonly struct GridPosition
+{
+    public int Row { get; }
+    public int Col { get; }
+
+    public GridPosition(int row, int col)
+    {
+        Row = row;
+        Col = col;
+    }
+
+    public override string ToString() => $"[{Row}, {Col}]";
+}
+
+public class InMemoryTrackRepository : ITrackRepository
+{
+    private readonly List<Track> _tracks = new();
+
+    public InMemoryTrackRepository()
+    {
+        SeedTracks();
+    }
+
+    private void SeedTracks()
+    {
+        _tracks.Add(new Track(1, "Bohemian Rhapsody", "Queen", 354, TrackGenre.Rock, new GridPosition(0, 0)));
+        _tracks.Add(new Track(2, "Billie Jean", "Michael Jackson", 294, TrackGenre.Pop, new GridPosition(0, 1)));
+        _tracks.Add(new Track(3, "Take Five", "Dave Brubeck", 324, TrackGenre.Jazz, new GridPosition(0, 2)));
+        _tracks.Add(new Track(4, "Clair de Lune", "Claude Debussy", 300, TrackGenre.Classical, new GridPosition(0, 3)));
+        _tracks.Add(new Track(5, "Lose Yourself", "Eminem", 326, TrackGenre.HipHop, new GridPosition(1, 0)));
+        _tracks.Add(new Track(6, "Strobe", "Deadmau5", 636, TrackGenre.Electronic, new GridPosition(1, 1)));
+        _tracks.Add(new Track(7, "Smells Like Teen Spirit", "Nirvana", 301, TrackGenre.Rock, new GridPosition(1, 2)));
+        _tracks.Add(new Track(8, "Blinding Lights", "The Weeknd", 200, TrackGenre.Pop, new GridPosition(1, 3)));
+    }
+
+    public void Add(Track track)
+    {
+        _tracks.Add(track);
+        Log.Information("Added track {Title} - ISRC: {ISRC}", track.Title, track.ISRC);
+    }
+
+    public IEnumerable<Track> GetAll()
+    {
+        foreach (Track track in _tracks)
+        {
+            yield return track;
+        }
+    }
+
+    public Track GetById(int id)
+    {
+        if (ParseToDictionary(_tracks).TryGetValue(id, out Track? track))
+        {
+            return track;
+        }
+
+        Log.Warning("Track lookup failed for id {Id}", id);
+        throw new TrackNotFoundException(id);
+    }
+
+    public IEnumerable<Track> Find(Predicate<Track> condition)
+    {
+        foreach (var track in _tracks)
+        {
+            if (condition(track))
+            {
+                yield return track;
+            }
+        }
+    }
+
+    public Dictionary<int, Track> ParseToDictionary(List<Track> tracks)
+    {
+        return tracks.ToDictionary(x => x.ISRC);
+    }
+
+    private HashSet<string>? ListAtrributes(int selection)
+    {
+        try
+        {
+            if (selection == 1)
+            {
+                HashSet<string> trackArtists = [];
+                for (int i = 0; i < _tracks.Count; i++)
+                {
+                    trackArtists.Add(_tracks[i].Artist);
+                }
+                return trackArtists;
+
+            }
+            else
+            {
+                HashSet<string> trackGenres = Enum.GetNames<TrackGenre>().ToHashSet();
+                return trackGenres;
+            }
+        }catch(Exception ex)
+        {
+            Log.Error("Error with message: {Message}", ex.Message);
+            return null;
+        }
+    }
+
+    public void ReturnListedAttributes(int selection)
+    {
+        HashSet<string>? set = ListAtrributes(selection);
+
+        if (set is null) {Log.Warning("Data could not be fetched."); return; }
+
+        Console.WriteLine(string.Join(Environment.NewLine, set));
+
+    }
+}
