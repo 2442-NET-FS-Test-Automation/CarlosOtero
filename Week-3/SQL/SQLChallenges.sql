@@ -9,7 +9,7 @@
 -- Comment can be done multi line with /* */
 
 /*
-DQL - Data Query Language
+DQL - Data Query Language 
 Keywords:
 
 SELECT - retrieve data, select the columns from the resulting set

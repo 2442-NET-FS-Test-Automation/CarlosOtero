@@ -8,7 +8,7 @@ Im going to break this script into sections, denoted by comments.
 
 IF DB_ID(N'LibraryDB') IS NULL
     CREATE DATABASE LibraryDB;
-GO
+GO 
 
 -- At the top of my file, before any commands/statements. I want to make sure,
 -- They run in the correct database.
