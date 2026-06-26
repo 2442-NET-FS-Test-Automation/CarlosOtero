@@ -113,10 +113,10 @@ GROUP BY a.Name
 order by count(*) desc;
 
 -- Which customers have the same initials as at least one other customer?
-
+SELECT SUBSTRING(FirstName, 1, 1), SUBSTRING(LastName, 1, 1) FROM Customer;
 
 -- Which countries have the most invoices?
-select top 3 BillingCountry from Invoice
+SELECT top 3 BillingCountry from Invoice
 GROUP BY BillingCountry
 ORDER BY COUNT(*) desc;
 
@@ -170,36 +170,74 @@ ORDER BY count(*)desc;
 
 -- 1. which artists did not make any albums at all?
 
+SELECT m.ArtistId, a.Name from Album as m
+JOIN Artist AS a ON a.ArtistId = m.AlbumId
+WHERE m.ArtistId NOT IN (SELECT ArtistId FROM dbo.Artist)
+GROUP BY a.Name, m.ArtistId;
 
 -- 2. which artists did not record any tracks of the Latin genre?
-
+SELECT a.Name from Track as t
+JOIN Album AS m ON m.AlbumId = t.AlbumId
+JOIN Artist AS a ON a.ArtistId = m.AlbumId
+JOIN Genre AS g ON g.GenreId = t.GenreId
+WHERE g.Name != 'Latin'
+GROUP BY a.Name;
 
 -- 3. which video track has the longest length? (use media type table)
 
-
+SELECT top 1 t.Name, t.Milliseconds from Track as t
+JOIN MediaType AS m ON m.MediaTypeId = t.MediaTypeId
+WHERE m.MediaTypeId = 3
+ORDER BY t.Milliseconds DESC;
 
 -- 4. boss employee (the one who reports to nobody)
 
+SELECT * From Employee WHERE ReportsTo is NULL;
 
 -- 5. how many audio tracks were bought by German customers, and what was
 --    the total price paid for them?
 
+SELECT COUNT(*) as TrackAmount,Sum(i.Total) as TotalSpent from Invoice as i
+JOIN Customer AS c ON c.CustomerId = i.CustomerId
+JOIN InvoiceLine AS il ON il.InvoiceId = i.InvoiceId
+JOIN Track AS t ON t.TrackId = il.TrackId
+JOIN MediaType as m on m.MediaTypeId = t.MediaTypeId
+WHERE m.Name LIKE '%audio%' AND i.BillingCountry = 'Germany'
+ORDER BY TotalSpent DESC;
 
 
 -- 6. list the names and countries of the customers supported by an employee
 --    who was hired younger than 35.
 
-
+SELECT CONCAT(e.FirstName,' ', e.LastName) as FullName, c.Country from Invoice as i
+JOIN Customer AS c ON c.CustomerId = i.CustomerId 
+JOIN Employee as e  on e.EmployeeId = c.SupportRepId
+WHERE DATEDIFF(YEAR, e.HireDate, GetDate()) <= 35
+GROUP BY CONCAT(e.FirstName,' ', e.LastName), c.Country;
 
 
 -- DML exercises
 
 -- 1. insert two new records into the employee table.
 
+INSERT into dbo.Employee (LastName,FirstName,Title,ReportsTo,BirthDate,HireDate,Address,City,State,Country,PostalCode,Phone,Fax,Email) 
+VALUES('Johnson', 'Steve', 'Head Manager', 12, 1975-07-04,2000-08-01, 
+'111 Madison', 'Lorem Town','MA','Bermuda Triangle', '11224', '1111 2222 33333', '','mytestmail@chinookcorp.com');
 -- 2. insert two new records into the tracks table.
 
 -- 3. update customer Aaron Mitchell's name to Robert Walter
-
+UPDATE dbo.Customer SET FirstName = 'Robert', LastName = 'Walter'
+WHERE FirstName = 'Aaron' AND LastName = 'Mitchell';
 -- 4. delete one of the employees you inserted.
-
+DELETE FROM dbo.Employee WHERE FirstName = 'Steve' AND LastName = 'Johnson';
+-- The command won't execute due to a constraint, to do that we need to alter the constraint
+/*ALTER TABLE dbo.Customer
+DROP CONSTRAINT IF EXISTS FK_CustomerSupportRepId;
+*/ -- And then execute the delete
+-- 5. delete customer Robert Walter.
+DELETE FROM dbo.Customer WHERE FirstName = 'Robert' AND LastName = 'Walter';
+-- The command won't execute due to a constraint, to do that we need to alter the constraint
+/*ALTER TABLE dbo.Invoice
+DROP CONSTRAINT IF EXISTS FK_InvoiceCustomerId;
+*/ -- And then execute the delete
 -- 5. delete customer Robert Walter.
