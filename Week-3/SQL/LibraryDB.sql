@@ -743,7 +743,7 @@ CHECK (AvailableCopies >= 0);
 -- Views are like saved queries. Think back to that large triple join we did on DQL day. We can
 -- take something like that, that is annoying to write or think of over and over again
 -- and we can save it as a View. Then we can query the view as if it was a table.
-
+GO
 CREATE OR ALTER VIEW dbo.vw_ActiveLoans
 AS
 SELECT m.FirstName + ' ' + m.LastName AS Member,
