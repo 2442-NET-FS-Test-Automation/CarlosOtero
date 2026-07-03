@@ -1,12 +1,9 @@
 --CREATE DATABASE HospitalDB;
 
---USE HospitalDB;
+USE HospitalDB;
 GO 
 
--- ==========================================
--- 1. DROP TABLES IF THEY EXIST (CLEAN SLATE)
--- ==========================================
--- Dropping child tables first to avoid dependency conflicts
+
 DROP TABLE IF EXISTS User_Accounts;
 DROP TABLE IF EXISTS Schedules;
 DROP TABLE IF EXISTS Lab_Results;
@@ -26,9 +23,6 @@ DROP TABLE IF EXISTS Staff;
 DROP TABLE IF EXISTS Departments;
 GO
 
--- ==========================================
--- 2. CREATE WARD & DEPARTMENT ENTITIES
--- ==========================================
 
 CREATE TABLE Departments (
     DepartmentID INT IDENTITY(1,1) PRIMARY KEY,
@@ -46,10 +40,6 @@ CREATE TABLE Rooms (
     CONSTRAINT FK_Rooms_Departments FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
 );
 GO
-
--- ==========================================
--- 3. CREATE HR & SECURITY ENTITIES (INHERITANCE)
--- ==========================================
 
 CREATE TABLE Staff (
     StaffID INT IDENTITY(1,1) PRIMARY KEY,
@@ -93,9 +83,6 @@ CREATE TABLE User_Accounts (
 );
 GO
 
--- ==========================================
--- 4. CREATE PATIENT CORE ENTITIES
--- ==========================================
 
 CREATE TABLE Patients (
     PatientID INT IDENTITY(1,1) PRIMARY KEY,
@@ -141,10 +128,6 @@ CREATE TABLE Medical_Records (
 );
 GO
 
--- ==========================================
--- 5. CREATE INPATIENT ADMISSIONS
--- ==========================================
-
 CREATE TABLE Admissions (
     AdmissionID INT IDENTITY(1,1) PRIMARY KEY,
     PatientID INT NOT NULL,
@@ -160,10 +143,6 @@ CREATE TABLE Admissions (
     CONSTRAINT CK_Discharge_Date CHECK (DischargeDate IS NULL OR DischargeDate >= AdmissionDate)
 );
 GO
-
--- ==========================================
--- 6. CREATE PHARMACY & INVENTORY ENTITIES
--- ==========================================
 
 CREATE TABLE Medications (
     MedicationID INT IDENTITY(1,1) PRIMARY KEY,
@@ -197,10 +176,6 @@ CREATE TABLE Prescription_Details (
 );
 GO
 
--- ==========================================
--- 7. CREATE LAB & DIAGNOSTIC ENTITIES
--- ==========================================
-
 CREATE TABLE Lab_Tests (
     TestID INT IDENTITY(1,1) PRIMARY KEY,
     TestCategory VARCHAR(50) NOT NULL CHECK (TestCategory IN ('Bloodwork', 'Radiology', 'Pathology', 'Cardiology')),
@@ -231,10 +206,6 @@ CREATE TABLE Lab_Results (
 );
 GO
 
--- ==========================================
--- 8. CREATE BILLING ENTITY
--- ==========================================
-
 CREATE TABLE Billing (
     BillingID INT IDENTITY(1,1) PRIMARY KEY,
     PatientID INT NOT NULL,
@@ -253,21 +224,12 @@ CREATE TABLE Billing (
 -- POPULATE MOCK DATA (SQL SERVER T-SQL)
 -- ==========================================
 
--- Disable constraints temporarily to make mass inserts seamless if needed, 
--- but this script inserts in exact hierarchical order to avoid conflict.
-
--- ==========================================
--- POPULATE MOCK DATA FOR EXACT SCHEMA
--- ==========================================
-
--- 1. Departments
 INSERT INTO Departments (DepartmentName, LocationBlock, ContactExtension) VALUES 
 ('Emergency Room', 'Block A, Floor 1', '101'),
 ('Pediatrics', 'Block B, Floor 2', '202'),
 ('Cardiology', 'Block C, Floor 3', '303'),
 ('General Ward', 'Block A, Floor 2', '102');
 
--- 2. Rooms
 INSERT INTO Rooms (DepartmentID, RoomNumber, RoomType, Status) VALUES 
 (1, 'ER-101', 'ICU', 'Available'),
 (1, 'ER-102', 'ICU', 'Occupied'),
@@ -275,7 +237,6 @@ INSERT INTO Rooms (DepartmentID, RoomNumber, RoomType, Status) VALUES
 (3, 'CARD-301', 'Private', 'Occupied'),
 (4, 'WARD-401', 'General Ward', 'Available');
 
--- 3. Staff
 INSERT INTO Staff (FirstName, LastName, Role, DepartmentID, ContactNumber, Email, IsActive) VALUES 
 ('Alice', 'Smith', 'Doctor', 3, '555-0101', 'alice.smith@hospital.com', 1),     
 ('Bob', 'Jones', 'Doctor', 2, '555-0102', 'bob.jones@hospital.com', 1),       
@@ -285,87 +246,68 @@ INSERT INTO Staff (FirstName, LastName, Role, DepartmentID, ContactNumber, Email
 ('Fiona', 'Gallagher', 'Pharmacist', 4, '555-0401', 'fiona.g@hospital.com', 1),
 ('George', 'Costanza', 'Admin', 4, '555-0501', 'george.c@hospital.com', 1);   
 
--- 4. Doctors (DoctorID maps exactly to StaffIDs 1, 2, and 3)
 INSERT INTO Doctors (DoctorID, Specialty, LicenseNumber) VALUES 
 (1, 'Cardiology', 'LIC-12345'),
 (2, 'Pediatrics', 'LIC-67890'),
 (3, 'Emergency Medicine', 'LIC-11223');
 
--- 5. Schedules
 INSERT INTO Schedules (StaffID, ShiftDate, ShiftStartTime, ShiftEndTime) VALUES
 (1, '2026-07-03', '08:00:00', '16:00:00'),
 (2, '2026-07-03', '06:00:00', '10:00:00'),
 (4, '2026-07-03', '07:00:00', '19:00:00'),
 (5, '2026-07-03', '09:00:00', '17:00:00');
 
--- 6. User Accounts
 INSERT INTO User_Accounts (StaffID, Username, PasswordHash, AccessLevel, LastLogin) VALUES 
 (1, 'asmith', 'hashed_pwd_123', 'Clinician', GETDATE()),
 (4, 'dprince', 'hashed_pwd_456', 'Clinician', GETDATE()),
 (7, 'gcostanza', 'hashed_pwd_789', 'SystemAdmin', GETDATE());
 
--- 7. Patients (Matches strict check constraints for Gender, BloodType and length restrictions)
 INSERT INTO Patients (FirstName, LastName, DateOfBirth, Insurance, Gender, Email, ContactNumber, EmergencyContactName, EmergencyContactPhone, BloodType, Address, Allergies) VALUES 
 ('John', 'Doe', '1985-05-12', 'Blue Cross', 'Male', 'john.doe@gmail.com', '555-9001', 'Jane Doe', '555-9002', 'A+', '123 Main St, Springfield', 'Peanuts'),
 ('Mary', 'Jane', '1992-10-22', 'Cigna', 'Female', 'mary.j@gmail.com', '555-8001', 'Peter Parker', '555-8002', 'O-', '456 Oak Rd, Riverdale', 'Penicillin'),
 ('Timmy', 'Turner', '2018-03-15', 'Medicaid', 'Male', 'timmy@turner.com', '555-7001', 'Vicky Turner', '555-7002', 'B+', '789 Maple Dr', NULL);
 
--- 8. Appointments
 INSERT INTO Appointments (PatientID, DoctorID, AppointmentDate, AppointmentTime, ReasonForVisit, Status) VALUES 
 (1, 1, '2026-07-01', '09:30:00', 'Chest pain follow-up', 'Completed'),
 (3, 2, '2026-07-05', '14:00:00', 'Routine pediatric checkup', 'Scheduled'),
 (2, 1, '2026-07-02', '10:00:00', 'Arrhythmia consultation', 'Cancelled');
 
--- 9. Medical Records (Adheres to the VARCHAR lengths and the NOT NULL ClinicalNotes column)
 INSERT INTO Medical_Records (PatientID, DoctorID, AppointmentID, VisitDate, Symptoms, Diagnosis, TreatmentPlan, ClinicalNotes) VALUES 
 (1, 1, 1, '2026-07-01', 'Mild chest tightness during exercise', 'Stable Angina', 'Prescribed Beta-Blockers. Low sodium diet.', 'Patient responding well to lifestyle adjustments.'),
 (2, 3, NULL, '2026-07-02', 'Acute appendicitis symptoms, severe lower right quadrant pain', 'Appendicitis', 'Emergency Appendectomy scheduled immediately', 'ER walk-in. Transferred to surgery floor.');
 
--- 10. Admissions (Adheres to VARCHAR(300) parameters)
 INSERT INTO Admissions (PatientID, RoomID, AttendingDoctorID, AdmissionDate, DischargeDate, AdmissionReason, DischargeNotes) VALUES 
 (2, 4, 3, '2026-07-02 02:15:00', NULL, 'Post-op appendectomy recovery', NULL),
 (1, 2, 1, '2026-06-25 10:00:00', '2026-06-28 14:00:00', 'Observation for cardiovascular monitoring', 'Discharged safely with prescription updates.');
 
--- 11. Medications
 INSERT INTO Medications (Name, GenericName, BrandName, DosageForm, Strength, UnitPrice) VALUES 
 ('Metoprolol', 'Metoprolol Succinate', 'Toprol XL', 'Tablet', '50mg', 0.75),
 ('Amoxicillin', 'Amoxicillin Trihydrate', 'Amoxil', 'Capsule', '500mg', 0.40),
 ('Ibuprofen', 'Ibuprofen', 'Advil', 'Tablet', '400mg', 0.15);
 
--- 12. Inventory (Adheres to your explicit NOT NULL SupplierName constraint)
 INSERT INTO Inventory (MedicationID, BatchNumber, StockQuantity, ExpiryDate, SupplierName) VALUES 
 (1, 'BATCH-M12', 500, '2028-12-01', 'PharmaCorp Inc'),
 (2, 'BATCH-A99', 1200, '2027-06-15', 'Global Meds Dist'),
 (3, 'BATCH-I44', 2000, '2029-01-20', 'PharmaCorp Inc');
 
--- 13. Prescription Details (Adheres to your explicit parameters, structural updates, and VARCHAR(300))
 INSERT INTO Prescription_Details (RecordID, MedicationID, DosageInstructions, Duration, QuantityDispensed) VALUES 
 (1, 1, 'Take 1 tablet daily in the morning', 30, 30),
 (2, 3, 'Take 1 tablet every 6 hours as needed for pain', 7, 28);
 
--- 14. Lab Tests (Matches your simplified layout tracking TestCategory checks and Cost metrics)
 INSERT INTO Lab_Tests (TestCategory, Cost) VALUES 
 ('Bloodwork', 45.00),
 ('Bloodwork', 60.00),
 ('Radiology', 120.00);
 
--- 15. Lab Requests
 INSERT INTO Lab_Requests (PatientID, DoctorID, TestID, RequestDate, Status) VALUES 
 (1, 1, 2, '2026-07-01 09:45:00', 'Completed'),
 (2, 3, 1, '2026-07-02 01:00:00', 'Processing');
 GO
 
--- ==========================================
--- POPULATE MOCK DATA FOR LAB_RESULTS & BILLING ONLY
--- ==========================================
-
--- 16. Lab Results 
--- Note: ResultValue is constrained to VARCHAR(20) max.
 INSERT INTO Lab_Results (RequestID, LabTechnicianID, ResultValue, ResultDate, PathologistNotes) VALUES 
 (1, 5, 'Elevated LDL', '2026-07-01 13:00:00', 'Slightly elevated LDL cholesterol. Recommend dietary control and lifestyle follow-up.'),
 (2, 5, 'Normal WBC', '2026-07-02 04:30:00', 'White blood cell count is within healthy boundaries. No acute infection indicated.');
 
--- 17. Billing
 INSERT INTO Billing (PatientID, AppointmentID, AdmissionID, InvoiceDate, TotalAmount, InsuranceCoverageAmount, PatientResponsibilityAmount, PaymentStatus) VALUES 
 (1, 1, NULL, '2026-07-01', 105.00, 80.00, 25.00, 'Paid'),
 (2, NULL, 1, '2026-07-02', 2450.00, 2000.00, 450.00, 'Unpaid');
