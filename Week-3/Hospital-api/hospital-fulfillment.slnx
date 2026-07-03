@@ -1,2 +1,4 @@
 <Solution>
+  <Project Path="Hospital.Api/Hospital.Api.csproj" />
+  <Project Path="Hospital.Data/Hospital.Data.csproj" />
 </Solution>
