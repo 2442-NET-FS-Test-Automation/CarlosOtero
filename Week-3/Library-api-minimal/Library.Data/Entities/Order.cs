@@ -10,7 +10,7 @@ public class Order
 
     public Priority Priority {get;set;}
     public DateTime CreatedUtc {get;set;} = DateTime.UtcNow; // Stamp it upon object creation
-
+    public Status Status { get; set; }
     public DateTime? CompletedUtc {get;set;}
 
     // Every Order has one or more OrderLines
