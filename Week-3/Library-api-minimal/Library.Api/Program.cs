@@ -212,7 +212,7 @@ app.MapPost("/inventory/rest", (LibraryDbContext db, ILogger<Program> Logger) =>
 // I can take in from the uri/query string
 // I can also take in parameters from the body
 
-app.MapPost("/orders", async ( OrderPaylod orderRequest, IDbContextFactory<LibraryDbContext> factory, CancellationToken ct, IFulfillmentService fSvc)  =>
+app.MapPost("/orders", async ( OrderPayload orderRequest, IDbContextFactory<LibraryDbContext> factory, CancellationToken ct, IFulfillmentService fSvc)  =>
 {
     // Remember we create an order in our db
     // Then try to create a Successful fulfillment record against the db
@@ -238,4 +238,4 @@ app.MapPost("/orders", async ( OrderPaylod orderRequest, IDbContextFactory<Libra
 
 app.Run();
 Log.CloseAndFlush();
-public record OrderPaylod(int ProductId, int Quantity, int CustomerId);
+public record OrderPayload(int ProductId, int Quantity, int CustomerId);
