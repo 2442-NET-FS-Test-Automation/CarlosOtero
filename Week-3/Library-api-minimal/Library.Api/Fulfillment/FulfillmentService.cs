@@ -13,6 +13,7 @@ namespace Library.Api.Fulfillment;
 public interface IFulfillmentService
 {
     public Task<FulfillmentResult> FulfillOneAsync(int orderId, CancellationToken ct);
+    public Task<BurstResult> FulfillBurstAsync(IEnumerable<int> orderIds, CancellationToken ct);
 }
 
 // I'm going to stick everything about order fulfillment in this file
@@ -93,7 +94,7 @@ public class FulfillmentService : IFulfillmentService
         db.FulfillmentEvent.Add(new FulfillmentEvent { OrderId = orderId, Type = "Fulfilled" });
 
         // Adding our retry save method
-        if(!await SaveWithRetryAsync(db, requested, ct)) // If we enter this if - we lost enough times
+        if (!await SaveWithRetryAsync(db, requested, ct)) // If we enter this if - we lost enough times
         {
             // That stock dropped this order was backordered
             db.ChangeTracker.Clear(); // clear change tracker
@@ -115,7 +116,7 @@ public class FulfillmentService : IFulfillmentService
     {
         // This is that RowVersion Change Tracker entry retry from yesterday
         // Let's set max retries to 3 - by wrapping everything in a loop
-        for (int attempt = 0; ; attempt++)
+        while(true)
         {
             // Our loop as written never exits - it does increment attempt for us
             // If we retry and fail x amount of times - we will throw an exception manually
@@ -129,7 +130,7 @@ public class FulfillmentService : IFulfillmentService
             }
             // We can tell our try catch how many times to handle this exception for us
             // After 3 attempts - we won't enter the catch. It bubbles up to wherever this method was called
-            catch (DbUpdateConcurrencyException ex) when (attempt < 3)
+            catch (DbUpdateConcurrencyException ex)
             {
                 // Retry logic - remember that Change Tracker stuff?
                 // entry is an EF Core Change Tracker entry
@@ -150,7 +151,7 @@ public class FulfillmentService : IFulfillmentService
                         int desiredAmount = requestedByProductId[inv.ProductId];
 
                         // Re-check on the fresh stock - don't blidly trust it
-                        if (freshValue < desiredAmount) return false;
+                        if (freshValue < desiredAmount) return false; // This is now our exit condition
                         inv.CurrentStock = freshValue - desiredAmount;
                     }
                 }
@@ -158,5 +159,19 @@ public class FulfillmentService : IFulfillmentService
 
         }
 
+    }
+
+    public async Task<BurstResult> FulfillBurstAsync(IEnumerable<int> orderIds, CancellationToken ct)
+    {
+        // We are just going to piggyback off of our FulfillOneAsync - no need to reqwrite logic we can just call it again
+        var tasks = orderIds.Select(id => FulfillOneAsync(id, ct)); // Each call will get it's own dbContext
+
+        // Await here until all tasks in the collection are complete
+        var results = await Task.WhenAll(tasks);
+
+        return new BurstResult(
+            Fulfilled: results.Count(r => r == FulfillmentResult.Fulfilled),
+            Backordered: results.Count(r => r == FulfillmentResult.Backordered)
+        );
     }
 }

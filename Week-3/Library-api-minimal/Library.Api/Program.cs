@@ -22,7 +22,7 @@ var conn_string = "Server=localhost,1433;Database=LibraryMinimalDb;User ID=sa;Pa
 
 Log.Logger = new LoggerConfiguration()
 .WriteTo.Console() // Write to console, and write to a file - starting a new file each day
-.WriteTo.File("logs/fulfillment-log-.txt", rollingInterval : RollingInterval.Day)
+.WriteTo.File("logs/fulfillment-log-.txt", rollingInterval: RollingInterval.Day)
 .CreateLogger();
 
 builder.Host.UseSerilog(); // tell the builder to use Serilog for logging
@@ -44,7 +44,7 @@ ServiceLifetime.Scoped, ServiceLifetime.Singleton); // Scoped is the default, bu
 builder.Services.AddDbContextFactory<LibraryDbContext>(options => options.UseSqlServer(conn_string));
 
 builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
-
+builder.Services.AddScoped<ISeeder, Seeder>();
 // Swagger stuff added to builder
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -181,22 +181,22 @@ app.MapPost("/inventory/rest", (LibraryDbContext db, ILogger<Program> Logger) =>
     Logger.LogInformation("Started seeing database");
 
     // What  I want to do is reset the  items that I  know I stuck into the db
-    foreach(InventoryItem inv in db.Inventory) // for each item in mu db inventory table... do something
+    foreach (InventoryItem inv in db.Inventory) // for each item in mu db inventory table... do something
     {
         // I only want to do something if the  primary key is 1, 2, or 3
         switch (inv.Id)
         {
             case 1:
                 inv.CurrentStock = 5;
-            break;
+                break;
             case 2:
                 inv.CurrentStock = 3;
-            break;
+                break;
             case 3:
                 inv.CurrentStock = 8;
-            break;
+                break;
             default:
-            break;
+                break;
         }
     }
 
@@ -212,7 +212,7 @@ app.MapPost("/inventory/rest", (LibraryDbContext db, ILogger<Program> Logger) =>
 // I can take in from the uri/query string
 // I can also take in parameters from the body
 
-app.MapPost("/orders", async ( OrderPaylod orderRequest, IDbContextFactory<LibraryDbContext> factory, CancellationToken ct, IFulfillmentService fSvc)  =>
+app.MapPost("/orders", async (OrderPaylod orderRequest, IDbContextFactory<LibraryDbContext> factory, CancellationToken ct, IFulfillmentService fSvc) =>
 {
     // Remember we create an order in our db
     // Then try to create a Successful fulfillment record against the db
@@ -222,17 +222,57 @@ app.MapPost("/orders", async ( OrderPaylod orderRequest, IDbContextFactory<Libra
         CustomerId = orderRequest.CustomerId,
         Priority = Priority.Normal,
         // Using the orderRequest from the HTTP request body to create my order
-        Lines = { new OrderLines { ProductId = orderRequest.ProductId, Quantity = orderRequest.Quantity}}
+        Lines = { new OrderLines { ProductId = orderRequest.ProductId, Quantity = orderRequest.Quantity } }
     };
 
     db.Order.Add(newOrder); // Add new order
     await db.SaveChangesAsync(ct); // Save that order to db
 
     // Now that we've added the order - we try to fulfill it
-    var result = await fSvc.FulfillOneAsync(newOrder.Id,ct); // newOrder is now in the db, we can add for it
+    var result = await fSvc.FulfillOneAsync(newOrder.Id, ct); // newOrder is now in the db, we can add for it
     return Results.Ok(new { orderId = newOrder.Id, fulfillmentResult = result.ToString() });
 });
 
+// Burst endpoint
+// Forgoing creating a record - we will take these from the query string
+// IHostApplicationlifetime - this let's us see events related to the app lifetime
+// we are going to use it to make sure we "flush" pending orders if the app is asked to stop
+app.MapPost("/orders/burst", (int n, bool expedited, ISeeder seeder,
+IServiceScopeFactory scopes, IHostApplicationLifetime lifetime) =>
+{
+    var ids = seeder.SeedOrders(n, expedited); //calling the seed orders method with the stuff from front end
+    var appStopping = lifetime.ApplicationStopping; // gives us a cancellation token that is called when app goes to shutdown
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            using var scope = scopes.CreateScope(); // ask for a fresh scope
+            var service = scope.ServiceProvider.GetRequiredService<IFulfillmentService>(); // Grab a fulfillment service
+            await service.FulfillBurstAsync(ids, appStopping); // use it to call fulfillBurstAsync()
+        }
+        catch (Exception ex)
+        {
+            // This task is fire and forget because we aren't waiting or storing its result
+            // any exceptions would be "swallowed" i.e. they would die with the task in the background
+            Log.Error(ex, "Burst fulfillment failed");
+        }
+    }, appStopping);
+});
+
+app.MapGet("/verify/no-oversell", (LibraryDbContext db) =>
+{
+    var rows = db.Inventory.Include(i => i.Product).ToList(); // Grab inventory rows, include the product objects as well
+    var negative = rows.Where(i => i.CurrentStock < 0).ToList(); // Grab items with negative stock
+    var fulfilled = db.FulfillmentEvent.Count(e => e.Type == "Fulfilled"); // count the fulfilled orders
+
+    return new
+    {
+        anyNegative = negative.Any(),
+        onHand = rows.Select(i => new { i.ProductId, i.CurrentStock }),
+        unitsFulfilled = fulfilled
+    };
+});
 
 // My file always ends with app.Run() - minimal API or Controller API
 

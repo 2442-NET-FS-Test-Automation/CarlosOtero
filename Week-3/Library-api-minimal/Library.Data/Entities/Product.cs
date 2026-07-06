@@ -7,9 +7,9 @@ public class Product
 {
     // Do not forget getters and setters
     public int Id { get; set; }
-    public string Sku { get; set; }
+    public string? Sku { get; set; }
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
     // Using a data annotation to enforce a constraint on my column
     // In this case, 10 total digits, 2 after the decimal place
     [Precision(10,2)]
