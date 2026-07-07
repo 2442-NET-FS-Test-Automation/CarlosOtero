@@ -7,6 +7,7 @@ using Library.Data.Entities;
 using Serilog;
 using Microsoft.AspNetCore.Components.Infrastructure;
 using Library.Api.Fulfillment;
+using System.Diagnostics;
 
 // This is my API program.cs
 // No main. We can think of it as 2 sections
@@ -22,7 +23,7 @@ var conn_string = "Server=localhost,1433;Database=LibraryMinimalDb;User ID=sa;Pa
 
 Log.Logger = new LoggerConfiguration()
 .WriteTo.Console() // Write to console, and write to a file - starting a new file each day
-.WriteTo.File("logs/fulfillment-log-.txt", rollingInterval : RollingInterval.Day)
+.WriteTo.File("logs/fulfillment-log-.txt", rollingInterval: RollingInterval.Day)
 .CreateLogger();
 
 builder.Host.UseSerilog(); // tell the builder to use Serilog for logging
@@ -44,7 +45,9 @@ ServiceLifetime.Scoped, ServiceLifetime.Singleton); // Scoped is the default, bu
 builder.Services.AddDbContextFactory<LibraryDbContext>(options => options.UseSqlServer(conn_string));
 
 builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
-
+builder.Services.AddScoped<ISeeder, Seeder>();
+builder.Services.AddScoped<BurstPlanner>(); // adding our burstPlanner, will be used in FulfillmentService
+builder.Services.AddScoped<OrderFactory>();
 // Swagger stuff added to builder
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -106,6 +109,14 @@ app.MapGet("/peek/tracking", (LibraryDbContext db) =>
     db.ChangeTracker.Clear();
 
     return states;
+});
+
+// Peek - Loading strategies
+app.MapGet("/peek/loading", (LibraryDbContext db) =>
+{
+    Product product = db.Products.First(); // Grab the first product from DB table 
+    // Explicit Loading via Load()
+    db.Entry(product).Reference(p => p.Inventory).Load(); // Making another  trip to the database to populate the property
 });
 
 // Lets manually go out of our way to create a conflict - obviously don't do this in a real app
@@ -181,22 +192,22 @@ app.MapPost("/inventory/rest", (LibraryDbContext db, ILogger<Program> Logger) =>
     Logger.LogInformation("Started seeing database");
 
     // What  I want to do is reset the  items that I  know I stuck into the db
-    foreach(InventoryItem inv in db.Inventory) // for each item in mu db inventory table... do something
+    foreach (InventoryItem inv in db.Inventory) // for each item in mu db inventory table... do something
     {
         // I only want to do something if the  primary key is 1, 2, or 3
         switch (inv.Id)
         {
             case 1:
                 inv.CurrentStock = 5;
-            break;
+                break;
             case 2:
                 inv.CurrentStock = 3;
-            break;
+                break;
             case 3:
                 inv.CurrentStock = 8;
-            break;
+                break;
             default:
-            break;
+                break;
         }
     }
 
@@ -212,7 +223,7 @@ app.MapPost("/inventory/rest", (LibraryDbContext db, ILogger<Program> Logger) =>
 // I can take in from the uri/query string
 // I can also take in parameters from the body
 
-app.MapPost("/orders", async ( OrderPayload orderRequest, IDbContextFactory<LibraryDbContext> factory, CancellationToken ct, IFulfillmentService fSvc)  =>
+app.MapPost("/orders", async (OrderPayload orderRequest, IDbContextFactory<LibraryDbContext> factory, CancellationToken ct, IFulfillmentService fSvc) =>
 {
     // Remember we create an order in our db
     // Then try to create a Successful fulfillment record against the db
@@ -222,20 +233,161 @@ app.MapPost("/orders", async ( OrderPayload orderRequest, IDbContextFactory<Libr
         CustomerId = orderRequest.CustomerId,
         Priority = Priority.Normal,
         // Using the orderRequest from the HTTP request body to create my order
-        Lines = { new OrderLines { ProductId = orderRequest.ProductId, Quantity = orderRequest.Quantity}}
+        Lines = { new OrderLines { ProductId = orderRequest.ProductId, Quantity = orderRequest.Quantity } }
     };
 
     db.Order.Add(newOrder); // Add new order
     await db.SaveChangesAsync(ct); // Save that order to db
 
     // Now that we've added the order - we try to fulfill it
-    var result = await fSvc.FulfillOneAsync(newOrder.Id,ct); // newOrder is now in the db, we can add for it
+    var result = await fSvc.FulfillOneAsync(newOrder.Id, ct); // newOrder is now in the db, we can add for it
     return Results.Ok(new { orderId = newOrder.Id, fulfillmentResult = result.ToString() });
 });
 
+// Burst endpoint
+// Forgoing creating a record - we will take these from the query string
+// IHostApplicationlifetime - this let's us see events related to the app lifetime
+// we are going to use it to make sure we "flush" pending orders if the app is asked to stop
+app.MapPost("/orders/burst", (int n, bool expedited, ISeeder seeder,
+IServiceScopeFactory scopes, IHostApplicationLifetime lifetime) =>
+{
+    var ids = seeder.SeedOrders(n, expedited); //calling the seed orders method with the stuff from front end
+    var appStopping = lifetime.ApplicationStopping; // gives us a cancellation token that is called when app goes to shutdown
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            using var scope = scopes.CreateScope(); // ask for a fresh scope
+            var service = scope.ServiceProvider.GetRequiredService<IFulfillmentService>(); // Grab a fulfillment service
+            await service.FulfillBurstAsync(ids, appStopping); // use it to call fulfillBurstAsync()
+        }
+        catch (Exception ex)
+        {
+            // This task is fire and forget because we aren't waiting or storing its result
+            // any exceptions would be "swallowed" i.e. they would die with the task in the background
+            Log.Error(ex, "Burst fulfillment failed");
+        }
+    }, appStopping);
+});
+
+app.MapGet("/verify/no-oversell", (LibraryDbContext db) =>
+{
+    var rows = db.Inventory.Include(i => i.Product).ToList(); // Grab inventory rows, include the product objects as well
+    var negative = rows.Where(i => i.CurrentStock < 0).ToList(); // Grab items with negative stock
+    var fulfilled = db.FulfillmentEvent.Count(e => e.Type == "Fulfilled"); // count the fulfilled orders
+
+    return new
+    {
+        anyNegative = negative.Any(),
+        onHand = rows.Select(i => new { i.ProductId, i.CurrentStock }),
+        unitsFulfilled = fulfilled
+    };
+});
+
+
+app.MapPost("/benchmark", async (int n, IFulfillmentService fs, ISeeder seeder, CancellationToken ct) =>
+{
+    // Let's see how sequential vs parallel run compare - with mixed orders
+    var ids1 = seeder.ResetAndCreateOrders(n);
+
+    // First, sequential
+    var sw1 = Stopwatch.StartNew(); // start our stopwatch
+
+    foreach(var id in ids1)
+    {
+        await fs.FulfillOneAsync(id,ct);
+    }
+    sw1.Stop();
+
+    // Next concurrent
+    var ids2 = seeder.ResetAndCreateOrders(n);
+
+    var sw2 = Stopwatch.StartNew(); // Start second stopwatch
+    await fs.FulfillBurstAsync(ids2, ct);
+    sw2.Stop();
+
+    return new
+    {
+        sequentialMs = sw1.ElapsedMilliseconds,
+        concurrentMs = sw2.ElapsedMilliseconds
+    };
+
+});
+
+
+// Completion report -- what orders got completed ans when
+// Note: In general Expedited orders should be completed first. In practice - depends on how long each thread takes
+// if for some reason an expedited order's thread slows down (due to some background process on the computer or something)
+// then a normal order CAN beat it. But we should see a defined trend.
+app.MapGet("/reports/by-completon", (LibraryDbContext db) =>
+{
+    return db.Order // Look inside orders table
+        .Where(o => o.Status == Status.Fulfilled)
+        .OrderBy(o=>o.CompletedUtc) // order by when they were completed
+        .Select(o=> new{o.Id, o.Priority,o.CompletedUtc}) // use info from those orders to make some return objects
+        .ToList(); // put them in a list and return them as JSON body of response
+
+});
+
+app.MapGet("/reports/top-products", (LibraryDbContext db) =>
+{
+    var ranked = db.FulfillmentEvent
+        .Where(e=>e.Type == "Fulfilled")
+        .Join(db.OrderLines, e => e.OrderId, l => l.OrderId, (e,l) => l)
+        .GroupBy(L => L.ProductId)
+        .Select(g => new {ProductId = g.Key, Units = g.Sum(L => L.Quantity)})
+        .ToList(); // LINQ is basically magic - pls learn to use it
+        
+        return ranked;
+});
+
+// Binary search on the sorted result
+app.MapGet("/reports/rank-of{units:int}", (int units, LibraryDbContext db) =>
+{
+    // Find product ranking that sold x units
+    var unitsDesc = db.FulfillmentEvent
+    .Where(e => e.Type == "Fulfilled")
+    .Join(db.OrderLines, e => e.OrderId, l => l.OrderId, (e, l) => l)
+    .GroupBy(l => l.ProductId)
+    .Select(g => g.Sum(l => l.Quantity))
+    .OrderByDescending(u => u)
+    .ToArray();
+
+    // Sorted DESC => using Binary Search to find the index of a specific quantity sold
+    // Ex. 1000, 400, 330, 34
+    // Our BinarySearch needs a comparer - for something like an int or a char this is easy
+    // if you want to do this cuth custom classes - you need to override CompareTo like we do ToString
+    var index = Array.BinarySearch(unitsDesc, units, Comparer<int>.Create((a,b) => b.CompareTo(a)));
+    return new {units, rank = index >= 0 ? index + 1 : -1}; // If BinarySearch doesn't find a thing - it returns some bitwise
+    // complement or something - we collapse it to -1
+});
+
+
+app.MapPost("/orders-with-factory", async (OrderRequest req, OrderFactory factory,
+    IDbContextFactory<LibraryDbContext> dbf, CancellationToken ct) =>
+{
+    try
+    {
+        Order newOrder = factory.CreateOrder(req.Kind, req.CustomerId,
+            req.Lines.Select(l => (l.Sku, l.Qty)));
+
+            await using var db = await dbf.CreateDbContextAsync(ct);
+
+            db.Order.Add(newOrder);
+
+            await db.SaveChangesAsync(ct);
+            return Results.Created($"/orders/{newOrder.Id}", new {newOrder.Id});
+    }
+    catch( UnknownSkuException ex)
+    {
+        Log.Warning("Rejected order: unknown SKU {Sku}", ex.Sku);
+        return Results.BadRequest(new {error = ex.Message, sku = ex.Sku});
+    }
+});
 
 // My file always ends with app.Run() - minimal API or Controller API
 
 app.Run();
 Log.CloseAndFlush();
-public record OrderPayload(int ProductId, int Quantity, int CustomerId);
+public record OrderPaylod(int ProductId, int Quantity, int CustomerId);

@@ -4,6 +4,7 @@ using Library.Data;
 using Library.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Collections.Concurrent;
 
 namespace Library.Api.Fulfillment;
 
@@ -13,6 +14,9 @@ namespace Library.Api.Fulfillment;
 public interface IFulfillmentService
 {
     public Task<FulfillmentResult> FulfillOneAsync(int orderId, CancellationToken ct);
+    public Task<BurstResult> FulfillBurstAsync(IEnumerable<int> orderIds, CancellationToken ct);
+
+    public int ResolveProductId(string sku);
 }
 
 // I'm going to stick everything about order fulfillment in this file
@@ -31,11 +35,30 @@ public class FulfillmentService : IFulfillmentService
     // If we need a DbContext or DbContextFactory or Logger or any other dependency
     // we DO NOT instatiate one here, we ask for one via the Constructor
     private readonly IDbContextFactory<LibraryDbContext> _factory; //holds my factory
+    private readonly BurstPlanner _planner; // holds my BurstPlanner object
+
+    private readonly ConcurrentDictionary<string, int> _skuToProductId;
 
     // The factory in the constructor arguments list comes from the ASP.NET DI Container
-    public FulfillmentService(IDbContextFactory<LibraryDbContext> factory)
+    public FulfillmentService(IDbContextFactory<LibraryDbContext> factory, BurstPlanner planner)
     {
         _factory = factory;
+        _planner = planner;
+
+        // Storing sku's and their product Id's so we can do O(1) lookup if we need it later
+        using var db = _factory.CreateDbContext();
+        _skuToProductId = new ConcurrentDictionary<string, int>(
+            db.Products.ToDictionary(p=>p.Sku, p => p.Id)
+        );
+    }
+
+    // UserOff
+
+    // Method to resolve Skus to productIds
+    public int ResolveProductId(string sku)
+    {
+        try {return _skuToProductId[sku];}
+        catch( KeyNotFoundException){ throw new UnknownSkuException(sku);}
     }
 
     // This method is going to handle fulfillment - it's going to be a bit  long. Which is why we didn't
@@ -52,7 +75,7 @@ public class FulfillmentService : IFulfillmentService
 
         // Let's create that dictionary with the productId key and the OrderIde value
         // yay for LINQ/Collections namespace
-        var requested = order.Lines.ToDictionary(L => L.ProductId, L => L.OrderId);
+        var requested = order.Lines.ToDictionary(L => L.ProductId, L => L.Quantity);
 
         // creating a flag for "can i continue fulfilling this order"
         bool canFulfill = true;
@@ -93,7 +116,7 @@ public class FulfillmentService : IFulfillmentService
         db.FulfillmentEvent.Add(new FulfillmentEvent { OrderId = orderId, Type = "Fulfilled" });
 
         // Adding our retry save method
-        if(!await SaveWithRetryAsync(db, requested, ct)) // If we enter this if - we lost enough times
+        if (!await SaveWithRetryAsync(db, requested, ct)) // If we enter this if - we lost enough times
         {
             // That stock dropped this order was backordered
             db.ChangeTracker.Clear(); // clear change tracker
@@ -115,7 +138,7 @@ public class FulfillmentService : IFulfillmentService
     {
         // This is that RowVersion Change Tracker entry retry from yesterday
         // Let's set max retries to 3 - by wrapping everything in a loop
-        for (int attempt = 0; ; attempt++)
+        while(true)
         {
             // Our loop as written never exits - it does increment attempt for us
             // If we retry and fail x amount of times - we will throw an exception manually
@@ -129,8 +152,9 @@ public class FulfillmentService : IFulfillmentService
             }
             // We can tell our try catch how many times to handle this exception for us
             // After 3 attempts - we won't enter the catch. It bubbles up to wherever this method was called
-            catch (DbUpdateConcurrencyException ex) when (attempt < 3)
+            catch (DbUpdateConcurrencyException ex)
             {
+                Log.Warning("Attempting retry");
                 // Retry logic - remember that Change Tracker stuff?
                 // entry is an EF Core Change Tracker entry
                 foreach (var entry in ex.Entries)
@@ -150,7 +174,7 @@ public class FulfillmentService : IFulfillmentService
                         int desiredAmount = requestedByProductId[inv.ProductId];
 
                         // Re-check on the fresh stock - don't blidly trust it
-                        if (freshValue < desiredAmount) return false;
+                        if (freshValue < desiredAmount) return false; // This is now our exit condition
                         inv.CurrentStock = freshValue - desiredAmount;
                     }
                 }
@@ -158,5 +182,33 @@ public class FulfillmentService : IFulfillmentService
 
         }
 
+    }
+
+    public async Task<BurstResult> FulfillBurstAsync(IEnumerable<int> orderIds, CancellationToken ct)
+    {
+        // Grabbing all my orderIds
+        List<int> idList = orderIds.ToList();
+
+        List<Order> orders; // place to store my orders
+        // Calling on our DbContext that we discard after we're done
+        await using (var db = await _factory.CreateDbContextAsync(ct))
+        {
+            orders = await db.Order.Where(o => idList.Contains(o.Id)).ToListAsync();
+        }
+
+        // Calling on our planning logic inside BurstPlanner
+        // planned contains our expedited/priority first order
+        var planned = _planner.OrderByPriority(orders);
+
+        // We are just going to piggyback off of our FulfillOneAsync - no need to reqwrite logic we can just call it again
+        var tasks = planned.Select(id => FulfillOneAsync(id, ct)); // Each call will get it's own dbContext
+
+        // Await here until all tasks in the collection are complete
+        var results = await Task.WhenAll(tasks);
+
+        return new BurstResult(
+            Fulfilled: results.Count(r => r == FulfillmentResult.Fulfilled),
+            Backordered: results.Count(r => r == FulfillmentResult.Backordered)
+        );
     }
 }
