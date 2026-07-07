@@ -17,7 +17,7 @@ public class MedicationsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/pharmacy/medications
+    // GET: api/pharmacy/medications - GET ALL MEDICATIONS
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MedicationDto>>> GetMedications()
     {
@@ -40,7 +40,7 @@ public class MedicationsController : ControllerBase
         return Ok(medications);
     }
 
-    // GET: api/pharmacy/medications/5
+    // GET: api/pharmacy/medications/5 - FIND BY ID
     [HttpGet("{id}")]
     public async Task<ActionResult<MedicationDto>> GetMedication(int id)
     {
