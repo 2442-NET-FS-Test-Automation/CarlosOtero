@@ -6,7 +6,7 @@ namespace HospitalApi.Models.Medical;
 public class Patient
 {
     [Key]
-    public int Id { get; set; }
+    public int PatientID { get; set; }
 
     [Required, StringLength(100)]
     public string FirstName { get; set; } = string.Empty;

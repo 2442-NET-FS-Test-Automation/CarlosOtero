@@ -22,6 +22,213 @@ namespace Hospital.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HospitalApi.Models.Medical.Appointment", b =>
+                {
+                    b.Property<int>("AppointmentID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AppointmentID"));
+
+                    b.Property<DateTime>("AppointmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("AppointmentTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("DoctorID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PatientID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReasonForVisit")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("AppointmentID");
+
+                    b.HasIndex("PatientID");
+
+                    b.ToTable("Appointments");
+
+                    b.HasData(
+                        new
+                        {
+                            AppointmentID = 1,
+                            AppointmentDate = new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            AppointmentTime = new TimeSpan(0, 9, 30, 0, 0),
+                            DoctorID = 1,
+                            PatientID = 1,
+                            ReasonForVisit = "Chest pain follow-up",
+                            Status = "Completed"
+                        },
+                        new
+                        {
+                            AppointmentID = 2,
+                            AppointmentDate = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            AppointmentTime = new TimeSpan(0, 14, 0, 0, 0),
+                            DoctorID = 2,
+                            PatientID = 3,
+                            ReasonForVisit = "Routine pediatric checkup",
+                            Status = "Scheduled"
+                        });
+                });
+
+            modelBuilder.Entity("HospitalApi.Models.Medical.MedicalRecord", b =>
+                {
+                    b.Property<int>("RecordID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecordID"));
+
+                    b.Property<int?>("AppointmentID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClinicalNotes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Diagnosis")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DoctorID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PatientID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Symptoms")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TreatmentPlan")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RecordID");
+
+                    b.HasIndex("AppointmentID");
+
+                    b.HasIndex("PatientID");
+
+                    b.ToTable("MedicalRecords");
+
+                    b.HasData(
+                        new
+                        {
+                            RecordID = 1,
+                            AppointmentID = 1,
+                            ClinicalNotes = "Patient responding well to lifestyle adjustments.",
+                            Diagnosis = "Stable Angina",
+                            DoctorID = 1,
+                            PatientID = 1,
+                            Symptoms = "Mild chest tightness during exercise",
+                            TreatmentPlan = "Prescribed Beta-Blockers. Low sodium diet.",
+                            VisitDate = new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            RecordID = 2,
+                            ClinicalNotes = "ER walk-in. Patient transferred directly to surgery floor.",
+                            Diagnosis = "Appendicitis",
+                            DoctorID = 3,
+                            PatientID = 2,
+                            Symptoms = "Acute appendicitis symptoms, severe lower right quadrant pain",
+                            TreatmentPlan = "Emergency Appendectomy scheduled immediately",
+                            VisitDate = new DateTime(2026, 7, 2, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
+                });
+
+            modelBuilder.Entity("HospitalApi.Models.Medical.Patient", b =>
+                {
+                    b.Property<int>("PatientID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PatientID"));
+
+                    b.Property<string>("Allergies")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("BloodType")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Insurance")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("PatientID");
+
+                    b.ToTable("Patients");
+
+                    b.HasData(
+                        new
+                        {
+                            PatientID = 1,
+                            Allergies = "Peanuts",
+                            BloodType = "A+",
+                            DateOfBirth = new DateTime(1985, 5, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FirstName = "John",
+                            Gender = "Male",
+                            Insurance = "Blue Cross",
+                            LastName = "Doe"
+                        },
+                        new
+                        {
+                            PatientID = 2,
+                            Allergies = "Penicillin",
+                            BloodType = "O-",
+                            DateOfBirth = new DateTime(1992, 10, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FirstName = "Mary",
+                            Gender = "Female",
+                            Insurance = "Cigna",
+                            LastName = "Jane"
+                        },
+                        new
+                        {
+                            PatientID = 3,
+                            BloodType = "B+",
+                            DateOfBirth = new DateTime(2018, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FirstName = "Timmy",
+                            Gender = "Male",
+                            Insurance = "Medicaid",
+                            LastName = "Turner"
+                        });
+                });
+
             modelBuilder.Entity("HospitalApi.Models.Pharmacy.InventoryItem", b =>
                 {
                     b.Property<int>("InventoryID")
@@ -55,6 +262,35 @@ namespace Hospital.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Inventory");
+
+                    b.HasData(
+                        new
+                        {
+                            InventoryID = 1,
+                            BatchNumber = "BATCH-M12",
+                            ExpiryDate = new DateTime(2028, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicationId = 1,
+                            StockQuantity = 500,
+                            SupplierName = "PharmaCorp Inc"
+                        },
+                        new
+                        {
+                            InventoryID = 2,
+                            BatchNumber = "BATCH-A99",
+                            ExpiryDate = new DateTime(2027, 6, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicationId = 2,
+                            StockQuantity = 1200,
+                            SupplierName = "Global Meds Dist"
+                        },
+                        new
+                        {
+                            InventoryID = 3,
+                            BatchNumber = "BATCH-I44",
+                            ExpiryDate = new DateTime(2029, 1, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            MedicationId = 3,
+                            StockQuantity = 2000,
+                            SupplierName = "PharmaCorp Inc"
+                        });
                 });
 
             modelBuilder.Entity("HospitalApi.Models.Pharmacy.Medication", b =>
@@ -97,6 +333,38 @@ namespace Hospital.Data.Migrations
                     b.HasKey("MedicationID");
 
                     b.ToTable("Medications");
+
+                    b.HasData(
+                        new
+                        {
+                            MedicationID = 1,
+                            BrandName = "Toprol XL",
+                            DosageForm = "Tablet",
+                            GenericName = "Metoprolol",
+                            Name = "Metoprolol Succinate",
+                            Strength = "50mg",
+                            UnitPrice = 0.75m
+                        },
+                        new
+                        {
+                            MedicationID = 2,
+                            BrandName = "Amoxil",
+                            DosageForm = "Capsule",
+                            GenericName = "Amoxicillin",
+                            Name = "Amoxicillin Trihydrate",
+                            Strength = "500mg",
+                            UnitPrice = 0.40m
+                        },
+                        new
+                        {
+                            MedicationID = 3,
+                            BrandName = "Advil",
+                            DosageForm = "Tablet",
+                            GenericName = "Ibuprofen",
+                            Name = "Ibuprofen",
+                            Strength = "400mg",
+                            UnitPrice = 0.15m
+                        });
                 });
 
             modelBuilder.Entity("HospitalApi.Models.Pharmacy.PrescriptionDetail", b =>
@@ -131,6 +399,34 @@ namespace Hospital.Data.Migrations
                     b.ToTable("PrescriptionDetails");
                 });
 
+            modelBuilder.Entity("HospitalApi.Models.Medical.Appointment", b =>
+                {
+                    b.HasOne("HospitalApi.Models.Medical.Patient", "Patient")
+                        .WithMany("Appointments")
+                        .HasForeignKey("PatientID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("HospitalApi.Models.Medical.MedicalRecord", b =>
+                {
+                    b.HasOne("HospitalApi.Models.Medical.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentID");
+
+                    b.HasOne("HospitalApi.Models.Medical.Patient", "Patient")
+                        .WithMany("MedicalRecords")
+                        .HasForeignKey("PatientID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("HospitalApi.Models.Pharmacy.InventoryItem", b =>
                 {
                     b.HasOne("HospitalApi.Models.Pharmacy.Medication", "Medication")
@@ -151,6 +447,13 @@ namespace Hospital.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Medication");
+                });
+
+            modelBuilder.Entity("HospitalApi.Models.Medical.Patient", b =>
+                {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("MedicalRecords");
                 });
 
             modelBuilder.Entity("HospitalApi.Models.Pharmacy.Medication", b =>

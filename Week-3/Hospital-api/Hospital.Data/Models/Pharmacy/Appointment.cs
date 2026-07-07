@@ -6,7 +6,7 @@ namespace HospitalApi.Models.Medical;
 public class Appointment
 {
     [Key]
-    public int Id { get; set; }
+    public int AppointmentID { get; set; }
 
     [Required]
     public int PatientID { get; set; }

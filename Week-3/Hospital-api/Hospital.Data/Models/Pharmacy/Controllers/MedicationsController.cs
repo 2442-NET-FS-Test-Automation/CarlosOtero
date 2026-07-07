@@ -65,7 +65,7 @@ public class MedicationsController : ControllerBase
         return Ok(m);
     }
 
-    // POST: api/pharmacy/medications
+    // POST: api/pharmacy/medications - INSERT MEDICATION
     [HttpPost]
     public async Task<ActionResult<MedicationDto>> CreateMedication(CreateMedicationDto dto)
     {

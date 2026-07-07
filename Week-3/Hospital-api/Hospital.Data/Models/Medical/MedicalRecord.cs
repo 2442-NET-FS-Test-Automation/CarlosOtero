@@ -6,7 +6,7 @@ namespace HospitalApi.Models.Medical;
 public class MedicalRecord
 {
     [Key]
-    public int Id { get; set; }
+    public int RecordID { get; set; }
 
     [Required]
     public int PatientID { get; set; }

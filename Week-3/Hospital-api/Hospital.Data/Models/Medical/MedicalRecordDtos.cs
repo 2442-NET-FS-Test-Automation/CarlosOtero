@@ -1,8 +1,8 @@
 namespace HospitalApi.DTOs.Medical;
 
 public record MedicalRecordDto(
-    int Id,
-    int PatientId,
+    int RecordIDID,
+    int PatientID,
     string PatientFullName,
     string? Diagnosis,
     string ClinicalNotes,
