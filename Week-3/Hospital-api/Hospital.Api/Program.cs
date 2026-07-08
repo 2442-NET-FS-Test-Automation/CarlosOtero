@@ -1,5 +1,5 @@
 using HospitalApi.Data;
-using HospitalApi.Models.Pharmacy;
+using HospitalApi.Models.Pharmacy.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -33,6 +33,10 @@ ServiceLifetime.Scoped, ServiceLifetime.Singleton); // Scoped is the default, bu
 builder.Services.AddDbContextFactory<HospitalDbContext>(options => options.UseSqlServer(conn_string));
 
 //builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
+builder.Services.AddScoped<IMedicationService,MedicationService>();
+builder.Services.AddScoped<IMedicalRecordsService,MedicalRecordsService>();
+builder.Services.AddScoped<IPatientService,PatientService>();
+
 builder.Services.AddAuthorization(); 
 builder.Services.AddControllers(); 
 // Swagger stuff added to builder

@@ -42,7 +42,7 @@ public class MedicationsController : ControllerBase
 
     // GET: api/pharmacy/medications/5 - FIND BY ID
     [HttpGet("{id}")]
-    public async Task<ActionResult<MedicationDto>> GetMedication(int id)
+    public async Task<ActionResult<MedicationDto>> GetMedicationById(int id)
     {
         var m = await _context.Medications
             .Include(m => m.Inventory)
@@ -87,6 +87,6 @@ public class MedicationsController : ControllerBase
             medication.DosageForm, medication.Strength, medication.UnitPrice, 0, null
         );
 
-        return CreatedAtAction(nameof(GetMedication), new { id = medication.MedicationID }, responseDto);
+        return CreatedAtAction(nameof(GetMedicationById), new { id = medication.MedicationID }, responseDto);
     }
 }
