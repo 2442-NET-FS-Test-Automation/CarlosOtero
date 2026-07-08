@@ -1,5 +1,7 @@
 using Library.Data;
 using Microsoft.EntityFrameworkCore;
+using Library.ControllersApi.Mapping;
+using Library.ControllersApi.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,9 @@ builder.Services.AddDbContextFactory<LibraryDbContext>(o => o.UseSqlServer(conn_
 
 // Registering our custom Repo and Service Layer methods like we did before
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+
+builder.Services.AddAutoMapper(cfg => cfg.AddMapps(typeof(MappingProfile).Assembly));
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
