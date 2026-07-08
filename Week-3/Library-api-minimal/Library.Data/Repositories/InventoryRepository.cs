@@ -41,11 +41,11 @@ public class InventoryRepository : IInventoryRepository
 
     // Let's do a simple add
     // 
-    public async Task<InventoryItem> AddInventoryItemsAsync(string sku, string name, decimal price, int quantity)
+    public async Task<InventoryItem> AddInventoryItemAsync(string sku, string name, decimal price, int quantity)
     {
         await using var db = await _factory.CreateDbContextAsync();
 
-        AddInventoryItemAsync newItem = new InventoryItem
+        InventoryItem  newItem = new InventoryItem
         {
             Product = new Product {Sku = sku, Name = name, Price=price},
             CurrentStock = quantity

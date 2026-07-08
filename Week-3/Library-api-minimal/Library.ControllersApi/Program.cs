@@ -16,7 +16,7 @@ builder.Services.AddDbContextFactory<LibraryDbContext>(o => o.UseSqlServer(conn_
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 
-builder.Services.AddAutoMapper(cfg => cfg.AddMapps(typeof(MappingProfile).Assembly));
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
