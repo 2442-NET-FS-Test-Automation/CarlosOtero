@@ -1,6 +1,6 @@
 using HospitalApi.Data;
 using HospitalApi.DTOs.Pharmacy;
-using HospitalApi.Exceptions; 
+using HospitalApi.Exceptions;
 using System.Collections.Concurrent;
 using HospitalApi.Models.Pharmacy;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +10,9 @@ namespace HospitalApi.Services.Pharmacy;
 
 public class FulfillmentService : IFulfillmentService
 {
-        private readonly IDbContextFactory<HospitalDbContext> _factory;
+    private readonly IDbContextFactory<HospitalDbContext> _factory;
     private readonly IBurstPlanner _planner;
-    
+
     // Target Requirement: Thread-safe high-speed ConcurrentDictionary lookup cache
     private readonly ConcurrentDictionary<string, int> _batchToInventoryIdMap = new();
 
@@ -21,11 +21,14 @@ public class FulfillmentService : IFulfillmentService
         _factory = factory;
         _planner = planner;
 
-        // Populate the lookup cache immediately upon application startup
+        // Populate the lookup cache immediately upon application startup to satisfy Target requirements
         using var db = _factory.CreateDbContext();
         foreach (var item in db.Inventory.AsNoTracking())
         {
-            _batchToInventoryIdMap[item.BatchNumber] = item.InventoryID;
+            if (!string.IsNullOrWhiteSpace(item.BatchNumber))
+            {
+                _batchToInventoryIdMap[item.BatchNumber] = item.InventoryID;
+            }
         }
     }
 
@@ -78,7 +81,7 @@ public class FulfillmentService : IFulfillmentService
 
             // Milestone M3 Core: Call the recursive save loop passing the requested dictionary map bounds
             var requestedMap = new Dictionary<int, int> { { inventoryId, quantity } };
-            
+
             if (!await SaveWithRetryAsync(db, requestedMap, ct))
             {
                 db.ChangeTracker.Clear();
@@ -95,7 +98,7 @@ public class FulfillmentService : IFulfillmentService
         catch (InventoryNotFoundException unfoundEx)
         {
             Log.Error(unfoundEx, "Fulfillment canceled completely. Targeting invalid Inventory Token {InvId}", unfoundEx.InventoryId);
-            
+
             // Audit-log the failure to track missing lookup attempts gracefully
             var errorLog = new PrescriptionDetail
             {
@@ -113,7 +116,7 @@ public class FulfillmentService : IFulfillmentService
         catch (BackorderException boEx)
         {
             Log.Warning("[Serilog] Trimming execution path. Appointment {AppId} marked BACKORDERED due to missing capacity bounds.", boEx.RecordId);
-            
+
             // Milestone M2/M5 Audit Logging: Record backorders instantly into PrescriptionDetails track logs
             var backorderLog = new PrescriptionDetail
             {
@@ -161,7 +164,7 @@ public class FulfillmentService : IFulfillmentService
                 {
                     // Reload the fresh database state directly from SQL Server disk
                     var currentDatabaseValues = await entry.GetDatabaseValuesAsync(ct);
-                    if (currentDatabaseValues == null) return false; 
+                    if (currentDatabaseValues == null) return false;
 
                     // Update the entry's original values bucket so EF knows we are checking fresh baselines
                     entry.OriginalValues.SetValues(currentDatabaseValues);
@@ -175,7 +178,7 @@ public class FulfillmentService : IFulfillmentService
                         if (freshStockValue < desiredAmount)
                         {
                             Log.Warning("Concurrency re-check failed. Fresh database stock level ({FreshValue}) is lower than desired quantity ({Desired})", freshStockValue, desiredAmount);
-                            return false; 
+                            return false;
                         }
 
                         // Re-apply deduction over the newly reloaded baseline stock volume state values
@@ -184,7 +187,7 @@ public class FulfillmentService : IFulfillmentService
                 }
             }
         }
-        return false; 
+        return false;
     }
 
     public async Task<BurstResult> FulfillBurstAsync(IEnumerable<BurstRequestPayload> orders, CancellationToken ct)
@@ -199,15 +202,15 @@ public class FulfillmentService : IFulfillmentService
         var executionTuples = prioritizedOrders.Select(o => (o.AppointmentId, o.InventoryId, o.QuantityRequested));
 
         // 2. Parallel Target execution tracking over your multi-threaded core processing lanes
-        await Parallel.ForEachAsync(executionTuples, new ParallelOptions 
-        { 
-            MaxDegreeOfParallelism = Environment.ProcessorCount, 
-            CancellationToken = ct 
+        await Parallel.ForEachAsync(executionTuples, new ParallelOptions
+        {
+            MaxDegreeOfParallelism = Environment.ProcessorCount,
+            CancellationToken = ct
         }, async (order, token) =>
         {
             // Pass the cancellation token through to uphold safe cascading cancellation checks
             var result = await FulfillOneAsync(order.AppointmentId, order.InventoryId, order.QuantityRequested, token);
-            
+
             if (result == FulfillmentResult.Fulfilled)
                 Interlocked.Increment(ref fulfilled);
             else

@@ -13,7 +13,6 @@ public record MedicationDto(
 );
 
 public record CreateMedicationDto(
-    int MedicationID,
     string Name,
     string GenericName,
     string BrandName,

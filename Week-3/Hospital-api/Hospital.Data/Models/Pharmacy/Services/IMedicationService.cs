@@ -1,18 +1,16 @@
 using Hospital.Data;
 using HospitalApi.DTOs;
 using HospitalApi.DTOs.Pharmacy;
+using Microsoft.AspNetCore.Mvc;
 namespace HospitalApi.Models.Pharmacy.Services;
 
 
 public interface IMedicationService
 {
-    Task<IEnumerable<MedicationDto>> GetMedications();
+    public Task<IEnumerable<MedicationDto>> GetAllMedicationsAsync();
 
-    Task<MedicationDto> GetMedicationById(int id);
+    public Task<MedicationDto> GetMedicationByIdAsync(int id);
 
-    Task<MedicationDto> CreateMedication(CreateMedicationDto dto);
-
-    
-
+    public Task<Medication> CreateMedicationAsync(CreateMedicationDto dto);
 
 }

@@ -8,6 +8,9 @@ public class InventoryItem
     [Key]
     public int InventoryID { get; set; }
 
+    public int MedicationID { get; set; }
+    public Medication? Medication { get; set; }
+    
     [Required, StringLength(50)]
     public string BatchNumber { get; set; } = string.Empty;
 
@@ -19,8 +22,5 @@ public class InventoryItem
     public string SupplierName { get; set; } = string.Empty;
 
     // Foreign Key backing field 
-    public int MedicationId { get; set; }
-    
-    [ForeignKey(nameof(MedicationId))]
-    public Medication? Medication { get; set; }
+    public byte[] RowVersion { get; set; } = default!;
 }

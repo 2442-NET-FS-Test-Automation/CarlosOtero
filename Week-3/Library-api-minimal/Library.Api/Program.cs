@@ -390,4 +390,6 @@ app.MapPost("/orders-with-factory", async (OrderRequest req, OrderFactory factor
 
 app.Run();
 Log.CloseAndFlush();
-public record OrderPaylod(int ProductId, int Quantity, int CustomerId);
+public record OrderPayload(int ProductId, int Quantity, int CustomerId);
+public record OrderLineRequest(string Sku, int Qty);
+public record OrderRequest(string Kind, int CustomerId, List<OrderLineRequest> Lines);

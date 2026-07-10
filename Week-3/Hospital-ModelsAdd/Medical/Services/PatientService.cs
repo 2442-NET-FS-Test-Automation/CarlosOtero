@@ -1,3 +1,9 @@
+using Hospital.Data;
+using HospitalApi.DTOs;
+using HospitalApi.DTOs.Medical;
+using HospitalApi.Models.Medical;
+using HospitalApi.Models.Medical.Services;
+
 namespace HospitalApi.Models.Pharmacy.Services;
 
 public interface PatientService : IPatientService

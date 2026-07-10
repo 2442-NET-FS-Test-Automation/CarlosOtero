@@ -1,5 +1,12 @@
 using HospitalApi.Data;
+using HospitalApi.DTOs.Pharmacy;
+using HospitalApi.Models.Pharmacy;
+
+//using HospitalApi.Models.Medical.Services;
 using HospitalApi.Models.Pharmacy.Services;
+using HospitalApi.Repositories.Pharmacy;
+using HospitalApi.Services.Infrastructure;
+using HospitalApi.Services.Pharmacy;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -11,7 +18,7 @@ var conn_string = "Server=localhost,1433;Database=HospitalDb;User ID=sa;Password
 
 Log.Logger = new LoggerConfiguration()
 .WriteTo.Console() // Write to console, and write to a file - starting a new file each day
-.WriteTo.File("logs/fulfillment-log-.txt", rollingInterval : RollingInterval.Day)
+.WriteTo.File("logs/fulfillment-log-.txt", rollingInterval: RollingInterval.Day)
 .CreateLogger();
 
 builder.Host.UseSerilog(); // tell the builder to use Serilog for logging
@@ -33,12 +40,21 @@ ServiceLifetime.Scoped, ServiceLifetime.Singleton); // Scoped is the default, bu
 builder.Services.AddDbContextFactory<HospitalDbContext>(options => options.UseSqlServer(conn_string));
 
 //builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
-builder.Services.AddScoped<IMedicationService,MedicationService>();
-builder.Services.AddScoped<IMedicalRecordsService,MedicalRecordsService>();
-builder.Services.AddScoped<IPatientService,PatientService>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IInventoryItemService, InventoryItemService>();
+builder.Services.AddScoped<IMedicationRepository, MedicationRepository>();
+builder.Services.AddScoped<IMedicationService, MedicationService>();
+builder.Services.AddScoped<ISeederService, SeederService>();
+builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
+builder.Services.AddScoped<IBenchmarkService, BenchmarkService>();
+builder.Services.AddScoped<ISeederService, SeederService>();
+builder.Services.AddScoped<IBurstPlanner, BurstPlanner>();
+//builder.Services.AddScoped<IMedicalRecordsService,MedicalRecordsService>();
+//builder.Services.AddScoped<IPatientService,PatientService>();
+//builder.Services.AddScoped<IAppointmentService,AppointmentService>();
 
-builder.Services.AddAuthorization(); 
-builder.Services.AddControllers(); 
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
 // Swagger stuff added to builder
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -46,17 +62,30 @@ builder.Services.AddSwaggerGen();
 // App area
 var app = builder.Build();
 
-// Swagger stuff added to app
-app.UseSwagger();
-app.UseSwaggerUI();
+// Host the interactive user workspace visualization blocks during development passes
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Hospital Domain API v1");
+        options.RoutePrefix = string.Empty; // Launches your Swagger interface page right at http://localhost:XXXX/
+    });
+}
+
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers(); // 🟢 Discovers and opens up your medications and inventory controllers automatically
 
+// Minimal API Diagnostic Health Verification Endpoint
+app.MapGet("/", () => "Hospital Enterprise API Gateway Online running on .NET 10.");
 
-// Endpoint area
-app.MapGet("/", () => "Hello World!");
-
-// My file always ends with app.Run() - minimal API or Controller API
+// ==========================================
+// 3. MILESTONE M5: GRACEFUL SHUTDOWN ENGINE
+// ==========================================
+AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
+{
+    Log.Information("Hospital API Server process stopping gracefully. Flushing telemetry logs buffers...");
+    Log.CloseAndFlush();
+};
 
 app.Run();
-Log.CloseAndFlush();

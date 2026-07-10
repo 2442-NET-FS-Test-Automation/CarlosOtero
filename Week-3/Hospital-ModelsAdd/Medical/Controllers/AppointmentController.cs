@@ -1,5 +1,7 @@
 using HospitalApi.Data;
 using HospitalApi.Models.Medical;
+using HospitalApi.Models.Medical.Services;
+using HospitalApi.Models.Pharmacy.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +14,12 @@ namespace HospitalApi.Controllers.Medical;
 public class AppointmentsController : ControllerBase
 {
     private readonly HospitalDbContext _context;
+    private readonly IAppointmentService _service;
 
-    public AppointmentsController(HospitalDbContext context)
+    public AppointmentsController(HospitalDbContext context, AppointmentService service)
     {
         _context = context;
+        _service = service;
     }
 
     /// <summary>

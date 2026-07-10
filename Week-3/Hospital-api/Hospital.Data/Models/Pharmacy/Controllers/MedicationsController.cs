@@ -1,92 +1,79 @@
-using HospitalApi.DTOs.Pharmacy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using HospitalApi.Models.Pharmacy;
 using HospitalApi.Data;
+using HospitalApi.DTOs.Pharmacy;
+using HospitalApi.Models.Pharmacy.Services;
+using HospitalApi.Services.Infrastructure;
+using HospitalApi.Services.Pharmacy;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalApi.Controllers.Pharmacy;
 
 [ApiController]
-[Route("api/pharmacy/[controller]")] // Generates endpoint path: api/pharmacy/medications
+[Route("api/pharmacy/[controller]")] // Generates clean base endpoint path: api/pharmacy/medications
+[Produces("application/json")]
 public class MedicationsController : ControllerBase
 {
-    private readonly HospitalDbContext _context;
+    private readonly ISeederService _seederService;
+    private readonly IMedicationService _service;
 
-    public MedicationsController(HospitalDbContext context)
+    public MedicationsController(IMedicationService service, ISeederService seederService)
     {
-        _context = context;
+        _service = service;
+        _seederService = seederService;
     }
 
     // GET: api/pharmacy/medications - GET ALL MEDICATIONS
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MedicationDto>>> GetMedications()
+    public async Task<IActionResult> GetMedications()
     {
-        var medications = await _context.Medications
-            .Include(m => m.Inventory)
-            .AsNoTracking()
-            .Select(m => new MedicationDto(
-                m.MedicationID,
-                m.Name,
-                m.GenericName,
-                m.BrandName,
-                m.DosageForm,
-                m.Strength,
-                m.UnitPrice,
-                m.Inventory != null ? m.Inventory.StockQuantity : 0,
-                m.Inventory != null ? m.Inventory.ExpiryDate : null
-            ))
-            .ToListAsync();
-
+        var medications = await _service.GetAllMedicationsAsync();
         return Ok(medications);
     }
 
-    // GET: api/pharmacy/medications/5 - FIND BY ID
-    [HttpGet("{id}")]
-    public async Task<ActionResult<MedicationDto>> GetMedicationById(int id)
+    [HttpPost("reset")]
+    public async Task<IActionResult> ResetPharmacyDomain()
     {
-        var m = await _context.Medications
-            .Include(m => m.Inventory)
-            .AsNoTracking()
-            .Where(m => m.MedicationID == id)
-            .Select(m => new MedicationDto(
-                m.MedicationID,
-                m.Name,
-                m.GenericName,
-                m.BrandName,
-                m.DosageForm,
-                m.Strength,
-                m.UnitPrice,
-                m.Inventory != null ? m.Inventory.StockQuantity : 0,
-                m.Inventory != null ? m.Inventory.ExpiryDate : null
-            ))
-            .FirstOrDefaultAsync();
-
-        if (m == null) return NotFound($"Medication with ID {id} was not found.");
-        return Ok(m);
+        await _seederService.ResetDatabaseAsync();
+        return Ok(new { message = "Catalog data reset." });
     }
 
-    // POST: api/pharmacy/medications - INSERT MEDICATION
-    [HttpPost]
-    public async Task<ActionResult<MedicationDto>> CreateMedication(CreateMedicationDto dto)
+    [HttpPost("add")]
+    public async Task<IActionResult> CreateMedication([FromBody] CreateMedicationDto payload)
     {
-        var medication = new Medication
-        {
-            Name = dto.Name,
-            GenericName = dto.GenericName,
-            BrandName = dto.BrandName,
-            DosageForm = dto.DosageForm,
-            Strength = dto.Strength,
-            UnitPrice = dto.UnitPrice
-        };
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        _context.Medications.Add(medication);
-        await _context.SaveChangesAsync();
+        var createdEntity = await _service.CreateMedicationAsync(payload);
 
+        // Map the created entity parameters back to a clean MedicationDto contract view response
         var responseDto = new MedicationDto(
-            medication.MedicationID, medication.Name, medication.GenericName, medication.BrandName,
-            medication.DosageForm, medication.Strength, medication.UnitPrice, 0, null
+            createdEntity.MedicationID,
+            createdEntity.Name,
+            createdEntity.GenericName,
+            createdEntity.BrandName,
+            createdEntity.DosageForm,
+            createdEntity.Strength,
+            createdEntity.UnitPrice,
+            0,
+            null
         );
 
-        return CreatedAtAction(nameof(GetMedicationById), new { id = medication.MedicationID }, responseDto);
+        // Standard REST Pattern: Return a 201 Created status containing the resource location URL
+        return CreatedAtAction(
+            nameof(GetMedicationById),
+            new { id = responseDto.MedicationID }, // Maps safely to your required DTO parameter spelling
+            responseDto
+        );
     }
+
+
+    // GET: api/pharmacy/medications/5 - FIND BY ID
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetMedicationById(int id)
+    {
+        var medication = await _service.GetMedicationByIdAsync(id);
+
+        if (medication == null) return NotFound($"Medication with ID {id} was not found.");
+        return Ok(medication);
+    }
+
 }

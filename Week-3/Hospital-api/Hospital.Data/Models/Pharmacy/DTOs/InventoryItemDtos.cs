@@ -15,4 +15,10 @@ public record CreateInventoryItemDto(
     DateTime ExpiryDate,
     string SupplierName
 );
+
+public record SupplierReportDto(
+    string SupplierName,
+    int TotalBatchesTracked,
+    int TotalStockAvailable
+);
 public record BurstRequestPayload(int AppointmentId, int InventoryId, int QuantityRequested);
