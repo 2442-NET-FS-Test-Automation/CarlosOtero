@@ -16,9 +16,7 @@ public class BurstPlanner : IBurstPlanner
 
         foreach (var payload in payloads)
         {
-
             int priorityValue = (payload.QuantityRequested > 50) ? 0 : 1;
-
             pq.Enqueue(payload, priorityValue);
         }
 

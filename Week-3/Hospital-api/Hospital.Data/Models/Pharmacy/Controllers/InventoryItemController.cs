@@ -10,32 +10,32 @@ using Microsoft.EntityFrameworkCore;
 namespace HospitalApi.Controllers.Pharmacy;
 
 [ApiController]
-[Route("api/pharmacy/[controller]")] 
+[Route("api/pharmacy/[controller]")]
 [Produces("application/json")]
 public class InventoryItemController : ControllerBase
 {
-    private readonly ISeederService _seederService; 
+    private readonly ISeederService _seederService;
     private readonly IInventoryItemService _service;
     private readonly IFulfillmentService _fulfillmentService;
     private readonly IDbContextFactory<HospitalDbContext> _factory;
-    private readonly IBenchmarkService _benchmarkService; 
+    private readonly IBenchmarkService _benchmarkService;
 
     public InventoryItemController(
         IInventoryItemService service,
-        ISeederService seederService, 
+        ISeederService seederService,
         IFulfillmentService fulfillmentService,
         IDbContextFactory<HospitalDbContext> factory,
-        IBenchmarkService benchmarkService) 
+        IBenchmarkService benchmarkService)
     {
         _service = service;
         _seederService = seederService;
         _fulfillmentService = fulfillmentService;
         _factory = factory;
-        _benchmarkService = benchmarkService; 
+        _benchmarkService = benchmarkService;
     }
 
 
-    [HttpGet]
+    [HttpGet] // Retrieve all available inventory Items
     public async Task<IActionResult> Get()
     {
         var items = await _service.AllAsync();
@@ -43,7 +43,7 @@ public class InventoryItemController : ControllerBase
     }
 
 
-    [HttpPost("reset")]
+    [HttpPost("reset")] // Reset inventory to default items
     public async Task<IActionResult> ResetInventoryDomain()
     {
         await _seederService.ResetDatabaseAsync();
@@ -51,7 +51,7 @@ public class InventoryItemController : ControllerBase
     }
 
 
-    [HttpGet("reports/supplier-search")]
+    [HttpGet("reports/supplier-search")] // Lookup present suppliers 
     public async Task<IActionResult> SearchSupplierStock([FromQuery] string targetSupplier)
     {
         await using var db = await _factory.CreateDbContextAsync();
@@ -80,7 +80,7 @@ public class InventoryItemController : ControllerBase
         return Ok(sortedReport[index]);
     }
 
-    [HttpGet("reports/supplier-stock")]
+    [HttpGet("reports/supplier-stock")] // Lookup stock of specific supplier
     public async Task<IActionResult> GetSupplierStockReport()
     {
         await using var db = await _factory.CreateDbContextAsync();
@@ -91,17 +91,18 @@ public class InventoryItemController : ControllerBase
             {
                 Supplier = g.Key,
                 TotalBatchesTracked = g.Count(),
-                TotalStockAvailable = g.Sum(i => i.StockQuantity) 
+                TotalStockAvailable = g.Sum(i => i.StockQuantity)
             })
             .ToListAsync();
 
         return Ok(report);
     }
 
-    [HttpPost("benchmark-test")]
+    [HttpPost("benchmark-test")] // Benchmark test for Sequential Time & Parallel Time
     public async Task<IActionResult> ExecuteLoadBenchmark(CancellationToken ct, [FromQuery] int requestsCount = 100)
     {
-        if (requestsCount <= 0) return BadRequest("Request count volume parameters must be greater than zero.");
+        if (requestsCount <= 0) 
+            return BadRequest("Request count volume parameters must be greater than zero.");
 
         var metricAnalysis = await _benchmarkService.RunLoadTestBenchmarkAsync(requestsCount, ct);
         return Ok(metricAnalysis);
@@ -119,7 +120,7 @@ public class InventoryItemController : ControllerBase
     }
 
 
-    [HttpGet("{id}")]
+    [HttpGet("{id}")] // Lookup inventory item by id
     public async Task<IActionResult> GetInventoryById(int id)
     {
         var inventoryItem = await _service.ByIdAsync(id);
@@ -129,16 +130,15 @@ public class InventoryItemController : ControllerBase
     }
 
 
-    [HttpPost("burst-process")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BurstResult))]
+    [HttpPost("burst-process")] // Handle a batch of orders to offload in multithread processing
     public async Task<IActionResult> ProcessBurst([FromBody] IEnumerable<BurstRequestPayload> payloads, CancellationToken ct)
     {
         var metricsResult = await _fulfillmentService.FulfillBurstAsync(payloads, ct);
-        return Ok(metricsResult); 
+        return Ok(metricsResult);
     }
 
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}")] // Remove item from inventory with id
     public async Task<IActionResult> DeleteInventory(int id)
     {
         var wasDeleted = await _service.RemoveAsync(id);

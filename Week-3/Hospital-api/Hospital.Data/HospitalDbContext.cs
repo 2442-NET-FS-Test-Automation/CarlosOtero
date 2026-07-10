@@ -1,3 +1,4 @@
+using HospitalApi.Models.Medical;
 using HospitalApi.Models.Pharmacy;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,12 @@ public class HospitalDbContext : DbContext
     public HospitalDbContext(DbContextOptions<HospitalDbContext> options) : base(options) { }
 
     public DbSet<Medication> Medications => Set<Medication>();
-    public DbSet<InventoryItem> Inventory => Set<InventoryItem>(); 
+    public DbSet<InventoryItem> Inventory => Set<InventoryItem>();
     public DbSet<PrescriptionDetail> PrescriptionDetails => Set<PrescriptionDetail>();
+
+    public DbSet<MedicalRecord> MedicalRecord => Set<MedicalRecord>();
+    public DbSet<Patient> Patient => Set<Patient>();
+    public DbSet<Appointment> Appointment => Set<Appointment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,24 +33,25 @@ public class HospitalDbContext : DbContext
 
 
         modelBuilder.Entity<Medication>().HasData(
-            new Medication { 
-                MedicationID = 1, 
-                Name = "Metoprolol Succinate", 
-                GenericName = "Metoprolol", 
-                BrandName = "Toprol XL", 
-                DosageForm = "Tablet", 
-                Strength = "50mg", 
-                UnitPrice = 0.75m 
-                }, 
-            new Medication 
-            { 
-                MedicationID = 2, 
-                Name = "Amoxicillin Trihydrate", 
-                GenericName = "Amoxicillin", 
-                BrandName = "Amoxil", 
-                DosageForm = "Capsule", 
-                Strength = "500mg", 
-                UnitPrice = 0.40m 
+            new Medication
+            {
+                MedicationID = 1,
+                Name = "Metoprolol Succinate",
+                GenericName = "Metoprolol",
+                BrandName = "Toprol XL",
+                DosageForm = "Tablet",
+                Strength = "50mg",
+                UnitPrice = 0.75m
+            },
+            new Medication
+            {
+                MedicationID = 2,
+                Name = "Amoxicillin Trihydrate",
+                GenericName = "Amoxicillin",
+                BrandName = "Amoxil",
+                DosageForm = "Capsule",
+                Strength = "500mg",
+                UnitPrice = 0.40m
             }
         );
 
@@ -81,20 +87,20 @@ public class HospitalDbContext : DbContext
             .HasMany(m => m.PrescriptionDetails)
             .WithOne(p => p.Medication)
             .HasForeignKey(p => p.MedicationId)
-            .OnDelete(DeleteBehavior.Restrict); 
+            .OnDelete(DeleteBehavior.Restrict);
 
 
-        // modelBuilder.Entity<Patient>()
-        //     .HasMany(p => p.Appointments)
-        //     .WithOne(a => a.Patient)
-        //     .HasForeignKey(a => a.PatientID)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Patient>()
+            .HasMany(p => p.Appointments)
+            .WithOne(a => a.Patient)
+            .HasForeignKey(a => a.PatientID)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // modelBuilder.Entity<Patient>()
-        //     .HasMany(p => p.MedicalRecords)
-        //     .WithOne(m => m.Patient)
-        //     .HasForeignKey(m => m.PatientID)
-        //     .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Patient>()
+            .HasMany(p => p.MedicalRecords)
+            .WithOne(m => m.Patient)
+            .HasForeignKey(m => m.PatientID)
+            .OnDelete(DeleteBehavior.Restrict);
 
 
     }

@@ -45,7 +45,7 @@ public class BenchmarkService : IBenchmarkService
         double speedup = seqMs / (parMs > 0 ? parMs : 1);
 
         Log.Information("[BENCHMARK] Sequential Run: {SeqTime}ms | Parallel Burst Run: {ParTime}ms", seqMs, parMs);
-        Log.Information("[BENCHMARK] .NET 10 Parallel Core Engine provided a {Speedup}x velocity acceleration factor!", Math.Round(speedup, 2));
+        Log.Information("[BENCHMARK] .NET 10 Parallel Core Engine provided {Speedup}x velocity acceleration factor", Math.Round(speedup, 2));
 
         return new BenchmarkMetricsResult(seqMs, parMs, Math.Round(speedup, 2), totalRequests);
     }

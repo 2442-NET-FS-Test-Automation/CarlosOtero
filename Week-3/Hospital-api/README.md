@@ -1,27 +1,57 @@
-# 📑 Hospital Pharmacy Domain API — Technical Architecture Documentation
+# Hospital Pharmacy Domain API — Technical Architecture Documentation
 
-## 1. Domain Scope & Order Cardinality
+## 0. Domain Scope & Order Cardinality
 
-- **Domain Context:** Hospital Pharmacy & Automated Warehouse Inventory Management System (`Pharmacy & Inventory`).
-- **Fulfillment Cardinality:** This platform implements **Single-line fulfillment** as a highly optimized MVP. Each incoming request (`BurstRequestPayload`) contains one target tracking identifier (`AppointmentId`), one resource location row pointer (`InventoryId`), and the atomic quantity requested to be deducted. This single-row structural focus eliminates cascading lock bottlenecks and maximizes throughput during intense database race conditions.
+- **Domain Context:** Hospital Pharmacy & Inventory Management System (`Pharmacy`).
+- **Fulfillment Cardinality:** This platform implements **Single-line fulfillment** as a highly optimized MVP. Each incoming request (`BurstRequestPayload`) contains one target tracking identifier (`AppointmentId`), one resource location row pointer (`InventoryId`), and the atomic quantity requested to be deducted.
 
 ---
 
-## 2. Coverage Contract: Grading Techniques-to-Type Mapping
+## 1. Core functionality
 
-| Grading Requirement Metric                   | Code File Location Reference                      | Concrete Implementation Element                                                    |
+- The Domain is currently divided into two areas of focus (`Medications & InventoryItem`). These two will be managed through a functional controller based structure, through which the directories and necessary methods will be segmented across the API the create the desired scalable structure, to which will allow for future scalability into more services.
+
+### Medication Catalog Administration (`POST /api/pharmacy/medications/add`)
+* **Registers brand-new approved drug variants into the hospital formulary catalog master database before stock can be ordered or tracked.**
+* **Technical Pipeline:** Directs an incoming `CreateMedicationDto` request body payload to the business layer. 
+
+### Automated Inventory Lifecycle & Replenishment (`POST /api/pharmacy/inventoryitem/inventory/{medicationId}`)
+* **Attaches physical stock batches, supplier metrics, and automated default shelf-life expiration dates to an unassigned medication.**
+* **Technical Pipeline:** Enforces the domain's strict **1:1 relationship constraint** (`IX_Inventory_MedicationID`). Because a single medication record can only map to exactly one primary inventory link to maintain fast warehouse data shapes, the `POST` route creates a single, unique child inventory row for an unassigned key (e.g., ID `3`). 
+
+### High-Concurrency Multithreaded Bulk Fulfillment (`POST /api/pharmacy/inventoryitem/burst-process`)
+* **Accepts an intense bulk array payload of thousands of concurrent allocation requests simultaneously and processes them instantly without locking web threads, overdrawing stock, or creating duplicate records.**
+* **Technical Pipeline:** Implements a high-speed Producer/Consumer model. The controller receives the payload, hands it off to an asynchronous background task thread pool, and yields an immediate `HTTP 202 Accepted` response to keep client interfaces fully responsive. The dataset is filtered through a native .NET `PriorityQueue<T>` sorting engine, shifting critical high-volume triage demands to the front of the line (Priority `0`) before standard clinic refills (Priority `1`). 
+
+### Optimistic Concurrency Race-Condition Mitigation
+* **Resolves heavy resource contention on identical database rows dynamically when multi-threaded requests attempt to deduct from the exact same medication batch at the exact same millisecond.**
+* **Technical Pipeline:** Guarded by an explicit database **`RowVersion` token** column. When concurrent threads clash, SQL Server permits the race winner to save while throwing a `DbUpdateConcurrencyException` to the slower losers. 
+
+### Automated Load Test Velocity Benchmarking (`POST /api/pharmacy/inventoryitem/benchmark-test`)
+* **Evaluates, analyzes, and prints system processing thresholds by running a dense workload simulation under identical database baselines.**
+* **Technical Pipeline:** Coordinates an automated load test of 1,000 parallel transactions. It invokes a `Stopwatch` to track raw execution times, records a baseline for sequential processing, clears database tables via `IDbSeederService`, and triggers the parallel burst pathway. 
+
+### Sorted Analytical Reporting & Binary Search Lookup (`GET /api/pharmacy/inventoryitem/reports/supplier-search`)
+* **Compiles a streamlined analytical inventory asset report grouped by vendors and searches the collection instantly for a target supplier name.**
+* **Technical Pipeline:** Executes a database-side LINQ `GroupBy` and `Sum` query to aggregate thousands of active warehouse records. 
+
+---
+
+## 2. Coverage Items
+
+| Metrics                   | Code File Location Reference                      | Concrete Implementation Element                                                    |
 | :------------------------------------------- | :------------------------------------------------ | :--------------------------------------------------------------------------------- |
-| **Floor: DbContext via Factory in DI**       | `Program.cs`                                      | `builder.Services.AddDbContextFactory<HospitalDbContext>()`                        |
-| **Floor: Token Concurrency Validation**      | `Data/HospitalDbContext.cs`                       | `.Property<byte[]>("RowVersion").IsRowVersion()`                                   |
-| **Floor: Transaction Atomic Isolation**      | `Services/Pharmacy/FulfillmentService.cs`         | `await db.Database.BeginTransactionAsync(ct)` inside `FulfillOneAsync`             |
-| **Floor: Concurrency Retry Loop Handler**    | `Services/Pharmacy/FulfillmentService.cs`         | `catch (DbUpdateConcurrencyException)` retry algorithm inside `SaveWithRetryAsync` |
-| **Floor: Responsive Background Task Burst**  | `Services/Pharmacy/FulfillmentService.cs`         | Multi-threaded inline background task drainage via `Parallel.ForEachAsync`         |
-| **Floor: Observability Stream Architecture** | `Program.cs` & Core Services                      | Structured `Log.Warning` and `Log.Information` tokens via **Serilog**              |
-| **Target: Expedited Priority Queue**         | `Services/Pharmacy/BurstPlanner.cs`               | Sorting optimization utilizing .NET native `PriorityQueue<T>`                      |
-| **Target: Velocity Benchmark Performance**   | `Services/Pharmacy/BenchmarkService.cs`           | Automated sequential vs parallel load tests utilizing `Stopwatch`                  |
-| **Target: In-Memory High-Speed Lookups**     | `Services/Pharmacy/FulfillmentService.cs`         | **$O(1)$** lookups using a thread-safe `ConcurrentDictionary` cache                |
-| **Target: Sorted Report + Binary Search**    | `Controllers/Pharmacy/InventoryItemController.cs` | **$O(\log N)$** item resolution via `.BinarySearch()` on sorted lists              |
-| **Target: Custom Data Exception States**     | `Exceptions/BackorderException.cs`                | Specific structural custom exceptions carrying live domain data state              |
+| **DbContext via Factory in DI**       | `Program.cs`                                      | `builder.Services.AddDbContextFactory<HospitalDbContext>()`                        |
+| **Token Concurrency Validation**      | `Data/HospitalDbContext.cs`                       | `.Property<byte[]>("RowVersion").IsRowVersion()`                                   |
+| **Transaction Atomic Isolation**      | `Services/Pharmacy/FulfillmentService.cs`         | `await db.Database.BeginTransactionAsync(ct)` inside `FulfillOneAsync`             |
+| **Concurrency Retry Loop Handler**    | `Services/Pharmacy/FulfillmentService.cs`         | `catch (DbUpdateConcurrencyException)` retry algorithm inside `SaveWithRetryAsync` |
+| **Responsive Background Task Burst**  | `Services/Pharmacy/FulfillmentService.cs`         | Multi-threaded inline background task drainage via `Parallel.ForEachAsync`         |
+| **Observability Stream Architecture** | `Program.cs` & Core Services                      | Structured `Log.Warning` and `Log.Information` tokens via **Serilog**              |
+| **Expedited Priority Queue**         | `Services/Pharmacy/BurstPlanner.cs`               | Sorting optimization utilizing .NET native `PriorityQueue<T>`                      |
+| **Velocity Benchmark Performance**   | `Services/Pharmacy/BenchmarkService.cs`           | Automated sequential vs parallel load tests utilizing `Stopwatch`                  |
+| **In-Memory High-Speed Lookups**     | `Services/Pharmacy/FulfillmentService.cs`         | **$O(1)$** lookups using a thread-safe `ConcurrentDictionary` cache                |
+| **Sorted Report + Binary Search**    | `Controllers/Pharmacy/InventoryItemController.cs` | **$O(\log N)$** item resolution via `.BinarySearch()` on sorted lists              |
+| **Custom Data Exception States**     | `Exceptions/BackorderException.cs`                | Specific structural custom exceptions carrying live domain data state              |
 
 ---
 
@@ -77,13 +107,3 @@ To prevent overselling and data duplication bugs, every single product deduction
 
 ---
 
-## 8. API Surface Status Codes (Engineering Definition of Done)
-
-The API endpoints enforce strict RESTful status codes to ensure a standard developer experience:
-
-- **`200 OK`:** Returned for successful read queries (`GET`) and analytical grouping reports, delivering the safe projected DTO data structures.
-- **`201 Created`:** Returned by `POST` modification endpoints (like `/add`), providing the location header pointing directly to the new resource.
-- **`202 Accepted`:** Returned by background batch workers. It indicates that the incoming payload was successfully validated and safely queued for background processing.
-- **`204 NoContent`:** Returned by data removal (`DELETE`) operations, confirming that the record was wiped from disk storage.
-- **`400 BadRequest`:** Returned immediately if validation fails (e.g., negative input values or missing required fields) to prevent bad payloads from hitting your database.
-- **`404 NotFound`:** Returned if a query requests a specific ID that does not exist in the database, preventing null-reference crashes.
