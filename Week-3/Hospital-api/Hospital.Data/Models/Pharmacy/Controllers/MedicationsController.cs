@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HospitalApi.Controllers.Pharmacy;
 
 [ApiController]
-[Route("api/pharmacy/[controller]")] // Generates clean base endpoint path: api/pharmacy/medications
+[Route("api/pharmacy/[controller]")] 
 [Produces("application/json")]
 public class MedicationsController : ControllerBase
 {
@@ -22,7 +22,6 @@ public class MedicationsController : ControllerBase
         _seederService = seederService;
     }
 
-    // GET: api/pharmacy/medications - GET ALL MEDICATIONS
     [HttpGet]
     public async Task<IActionResult> GetMedications()
     {
@@ -44,7 +43,6 @@ public class MedicationsController : ControllerBase
 
         var createdEntity = await _service.CreateMedicationAsync(payload);
 
-        // Map the created entity parameters back to a clean MedicationDto contract view response
         var responseDto = new MedicationDto(
             createdEntity.MedicationID,
             createdEntity.Name,
@@ -57,16 +55,14 @@ public class MedicationsController : ControllerBase
             null
         );
 
-        // Standard REST Pattern: Return a 201 Created status containing the resource location URL
         return CreatedAtAction(
             nameof(GetMedicationById),
-            new { id = responseDto.MedicationID }, // Maps safely to your required DTO parameter spelling
+            new { id = responseDto.MedicationID }, 
             responseDto
         );
     }
 
 
-    // GET: api/pharmacy/medications/5 - FIND BY ID
     [HttpGet("{id}")]
     public async Task<IActionResult> GetMedicationById(int id)
     {

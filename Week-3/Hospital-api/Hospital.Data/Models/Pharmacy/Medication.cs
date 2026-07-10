@@ -26,9 +26,7 @@ public class Medication
     [Precision(10, 2)]
     public decimal UnitPrice { get; set; }
 
-    // Scalable Navigation Property: 1-to-1 connection to physical tracking stock
     public InventoryItem? Inventory { get; set; }
 
-    // Scalable Navigation Property: 1-to-Many connection to prescription logs
     public ICollection<PrescriptionDetail> PrescriptionDetails { get; set; } = new List<PrescriptionDetail>();
 }

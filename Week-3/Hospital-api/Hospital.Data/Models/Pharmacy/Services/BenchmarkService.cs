@@ -18,24 +18,23 @@ public class BenchmarkService : IBenchmarkService
 
     public async Task<BenchmarkMetricsResult> RunLoadTestBenchmarkAsync(int totalRequests, CancellationToken ct)
     {
-        // 1. Generate standard payload blocks alternating target inventory keys (ID 1 and 2)
         var loadPack = Enumerable.Range(1, totalRequests).Select(index => new BurstRequestPayload(
-            AppointmentId: index,
-            InventoryId: (index % 2 == 0) ? 1 : 2,
+            AppointmentID: index,
+            InventoryID: (index % 2 == 0) ? 1 : 2,
             QuantityRequested: 1
         )).ToList();
 
-        await _seederService.ResetDatabaseAsync(); // Clean starting baseline
+        await _seederService.ResetDatabaseAsync(); 
         
         var seqTimer = Stopwatch.StartNew();
         foreach (var req in loadPack)
         {
-            ct.ThrowIfCancellationRequested(); // Milestone M5: Strict cancellation honoring
-            await _fulfillmentService.FulfillOneAsync(req.AppointmentId, req.InventoryId, req.QuantityRequested, ct);
+            ct.ThrowIfCancellationRequested(); 
+            await _fulfillmentService.FulfillOneAsync(req.AppointmentID, req.InventoryID, req.QuantityRequested, ct);
         }
         seqTimer.Stop();
 
-        await _seederService.ResetDatabaseAsync(); // Reset back to identical baseline values
+        await _seederService.ResetDatabaseAsync(); 
         
         var parTimer = Stopwatch.StartNew();
         await _fulfillmentService.FulfillBurstAsync(loadPack, ct);
@@ -45,7 +44,6 @@ public class BenchmarkService : IBenchmarkService
         double parMs = parTimer.ElapsedMilliseconds;
         double speedup = seqMs / (parMs > 0 ? parMs : 1);
 
-        // Milestone M3/M4: Structured Serilog logging stream requirements fulfilled
         Log.Information("[BENCHMARK] Sequential Run: {SeqTime}ms | Parallel Burst Run: {ParTime}ms", seqMs, parMs);
         Log.Information("[BENCHMARK] .NET 10 Parallel Core Engine provided a {Speedup}x velocity acceleration factor!", Math.Round(speedup, 2));
 

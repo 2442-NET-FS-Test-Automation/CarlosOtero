@@ -3,14 +3,14 @@ namespace HospitalApi.Exceptions;
 public class BackorderException : Exception
 {
     public int RecordId { get; }
-    public int InventoryId { get; }
+    public int InventoryID { get; }
     public int RequestedQuantity { get; }
 
-    public BackorderException(int recordId, int inventoryId, int requested)
-        : base($"Fulfillment failed and marked as backorder for Record: {recordId}, Inventory: {inventoryId}, Requested: {requested}.")
+    public BackorderException(int recordId, int inventoryID, int requested)
+        : base($"Fulfillment failed and marked as backorder for Record: {recordId}, Inventory: {inventoryID}, Requested: {requested}.")
     {
         RecordId = recordId;
-        InventoryId = inventoryId;
+        InventoryID = inventoryID;
         RequestedQuantity = requested;
     }
 }

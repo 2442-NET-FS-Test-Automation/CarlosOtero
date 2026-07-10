@@ -6,9 +6,8 @@ namespace HospitalApi.Models.Pharmacy;
 public class PrescriptionDetail
 {
     [Key]
-    public int Id { get; set; }
+    public int ID { get; set; }
 
-    // Scalable Foreign Key referencing external Medical Records domain
     [Required]
     public int RecordId { get; set; } 
 

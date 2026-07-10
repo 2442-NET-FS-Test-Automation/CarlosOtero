@@ -2,11 +2,11 @@ namespace HospitalApi.Exceptions;
 
 public class InventoryNotFoundException : Exception
 {
-    public int InventoryId { get; }
+    public int InventoryID { get; }
 
-    public InventoryNotFoundException(int inventoryId)
-        : base($"Target inventory identifier tracking token {inventoryId} could not be resolved inside the active database context.")
+    public InventoryNotFoundException(int inventoryID)
+        : base($"Target inventory identifier tracking token {inventoryID} could not be resolved inside the active database context.")
     {
-        InventoryId = inventoryId;
+        InventoryID = inventoryID;
     }
 }

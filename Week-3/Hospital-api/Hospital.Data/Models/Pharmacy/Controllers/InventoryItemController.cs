@@ -36,7 +36,6 @@ public class InventoryItemController : ControllerBase
 
 
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<InventoryItemDto>))] 
     public async Task<IActionResult> Get()
     {
         var items = await _service.AllAsync();
@@ -57,7 +56,6 @@ public class InventoryItemController : ControllerBase
     {
         await using var db = await _factory.CreateDbContextAsync();
 
-        // 1. Fetch and aggregate data from SQL Server
         var reportData = await db.Inventory
             .GroupBy(i => i.SupplierName)
             .Select(g => new SupplierReportDto(
@@ -93,7 +91,7 @@ public class InventoryItemController : ControllerBase
             {
                 Supplier = g.Key,
                 TotalBatchesTracked = g.Count(),
-                TotalStockAvailable = g.Sum(i => i.StockQuantity) // M2 Requirement: Valid LINQ aggregation summation
+                TotalStockAvailable = g.Sum(i => i.StockQuantity) 
             })
             .ToListAsync();
 
@@ -136,7 +134,7 @@ public class InventoryItemController : ControllerBase
     public async Task<IActionResult> ProcessBurst([FromBody] IEnumerable<BurstRequestPayload> payloads, CancellationToken ct)
     {
         var metricsResult = await _fulfillmentService.FulfillBurstAsync(payloads, ct);
-        return Ok(metricsResult); // Returns the total number of fulfilled vs backordered records
+        return Ok(metricsResult); 
     }
 
 

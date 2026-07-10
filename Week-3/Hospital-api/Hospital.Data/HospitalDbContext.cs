@@ -28,8 +28,25 @@ public class HospitalDbContext : DbContext
 
 
         modelBuilder.Entity<Medication>().HasData(
-            new Medication { MedicationID = 1, Name = "Metoprolol Succinate", GenericName = "Metoprolol", BrandName = "Toprol XL", DosageForm = "Tablet", Strength = "50mg", UnitPrice = 0.75m }, // 🟢 FIXED: Points to standard primary key: 'Id'
-            new Medication { MedicationID = 2, Name = "Amoxicillin Trihydrate", GenericName = "Amoxicillin", BrandName = "Amoxil", DosageForm = "Capsule", Strength = "500mg", UnitPrice = 0.40m }
+            new Medication { 
+                MedicationID = 1, 
+                Name = "Metoprolol Succinate", 
+                GenericName = "Metoprolol", 
+                BrandName = "Toprol XL", 
+                DosageForm = "Tablet", 
+                Strength = "50mg", 
+                UnitPrice = 0.75m 
+                }, 
+            new Medication 
+            { 
+                MedicationID = 2, 
+                Name = "Amoxicillin Trihydrate", 
+                GenericName = "Amoxicillin", 
+                BrandName = "Amoxil", 
+                DosageForm = "Capsule", 
+                Strength = "500mg", 
+                UnitPrice = 0.40m 
+            }
         );
 
 

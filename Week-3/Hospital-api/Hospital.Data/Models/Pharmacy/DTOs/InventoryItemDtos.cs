@@ -21,4 +21,4 @@ public record SupplierReportDto(
     int TotalBatchesTracked,
     int TotalStockAvailable
 );
-public record BurstRequestPayload(int AppointmentId, int InventoryId, int QuantityRequested);
+public record BurstRequestPayload(int AppointmentID, int InventoryID, int QuantityRequested);

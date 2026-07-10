@@ -5,15 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HospitalApi.Repositories.Pharmacy;
 
-// This class will hold my DB access logic. ALL it is concerned wih is looking into the database
 public class InventoryRepository : IInventoryRepository
 {
-    // Our repo class needs a db context - we can ask for a dbcontext from ASP.NET DI Container
-    // Same pattern we've been using since day 1 of the minimal API
+
 
     private readonly IDbContextFactory<HospitalDbContext> _factory;
 
-    // Still taking arguments in from ASP.NET during runtime.
 
     public InventoryRepository(IDbContextFactory<HospitalDbContext> factory)
     {
@@ -38,8 +35,7 @@ public class InventoryRepository : IInventoryRepository
             .FirstOrDefaultAsync(i => i.InventoryID == id);
     }
 
-    // Let's do a simple add
-    // 
+
     public async Task AddInventoryItemAsync(InventoryItem inventoryItem)
     {
         await using var db = await _factory.CreateDbContextAsync();
@@ -48,7 +44,7 @@ public class InventoryRepository : IInventoryRepository
         await db.SaveChangesAsync();
     }
 
-    // Let's do a remove
+
     public async Task<bool> RemoveByIdAsync(int id)
     {
         await using var db = await _factory.CreateDbContextAsync();

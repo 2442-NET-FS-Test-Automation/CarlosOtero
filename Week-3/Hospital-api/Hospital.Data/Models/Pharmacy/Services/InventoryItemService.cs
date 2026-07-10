@@ -44,20 +44,17 @@ public class InventoryItemService : IInventoryItemService
 
     public async Task<InventoryItemDto> AddInventoryAsync(int medicationId, CreateInventoryItemDto dto)
     {
-        // 1. Map your incoming request properties onto a fresh domain tracking entity card
         var newItem = new InventoryItem
         {
             MedicationID = medicationId,
             BatchNumber = dto.BatchNumber,
             StockQuantity = dto.StockQuantity,
-            ExpiryDate = DateTime.UtcNow.AddYears(2), // Automatic default shelf life initialization
+            ExpiryDate = DateTime.UtcNow.AddYears(2), 
             SupplierName = dto.SupplierName
         };
 
-        // 2. 🟢 FIXED: Call your factory repository exactly ONCE to handle the entire database insert sequence
         await _repo.AddInventoryItemAsync(newItem);
 
-        // 3. 🟢 FIXED: Return the DTO instantly. DO NOT call any other saving method in this method scope!
         return new InventoryItemDto(
             newItem.InventoryID,
             newItem.MedicationID,

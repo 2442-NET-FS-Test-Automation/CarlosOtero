@@ -21,6 +21,5 @@ public class InventoryItem
     [Required, StringLength(100)]
     public string SupplierName { get; set; } = string.Empty;
 
-    // Foreign Key backing field 
     public byte[] RowVersion { get; set; } = default!;
 }
