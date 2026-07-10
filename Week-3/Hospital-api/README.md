@@ -9,7 +9,7 @@
 
 ## 1. Core functionality
 
-- The Domain is currently divided into two areas of focus (`Medications & InventoryItem`). These two will be managed through a functional controller based structure, through which the directories and necessary methods will be segmented across the API the create the desired scalable structure, to which will allow for future scalability into more services.
+- **The Domain is currently divided into two areas of focus (`Medications & InventoryItem`). These two will be managed through a functional controller based structure, through which the directories and necessary methods, will be segmented across the API to create the desired scalable structure, to which will allow for future scalability into more services.**
 
 ### Medication Catalog Administration (`POST /api/pharmacy/medications/add`)
 * **Registers brand-new approved drug variants into the hospital formulary catalog master database before stock can be ordered or tracked.**
