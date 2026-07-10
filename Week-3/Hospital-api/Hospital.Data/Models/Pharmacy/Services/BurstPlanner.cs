@@ -16,12 +16,15 @@ public class BurstPlanner : IBurstPlanner
 
         foreach (var payload in payloads)
         {
-            int priorityValue = (payload.QuantityRequested > 50) ? 0 : 1;
+            int priorityValue = (payload.QuantityRequested > 50) ? 0 : 1; // Prioritize requests with more than 50 
             pq.Enqueue(payload, priorityValue);
         }
 
         var orderedByPriority = new List<BurstRequestPayload>();
 
+        // While out PriorityQueue has stuff in it - loop and add those things in the order they exist
+        // to our orderedByPriority List - uses out params
+        
         while (pq.TryDequeue(out var payload, out _))
         {
             orderedByPriority.Add(payload);

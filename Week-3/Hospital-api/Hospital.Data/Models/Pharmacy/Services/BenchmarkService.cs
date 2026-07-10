@@ -26,7 +26,7 @@ public class BenchmarkService : IBenchmarkService
 
         await _seederService.ResetDatabaseAsync(); 
         
-        var seqTimer = Stopwatch.StartNew();
+        var seqTimer = Stopwatch.StartNew(); // Sequential Timer
         foreach (var req in loadPack)
         {
             ct.ThrowIfCancellationRequested(); 
@@ -36,7 +36,7 @@ public class BenchmarkService : IBenchmarkService
 
         await _seederService.ResetDatabaseAsync(); 
         
-        var parTimer = Stopwatch.StartNew();
+        var parTimer = Stopwatch.StartNew(); // Parallelization Timer
         await _fulfillmentService.FulfillBurstAsync(loadPack, ct);
         parTimer.Stop();
 
