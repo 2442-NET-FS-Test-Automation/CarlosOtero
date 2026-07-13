@@ -4,6 +4,7 @@ using AutoMapper;
 using Library.ControllersApi.DTOs;
 using Library.ControllersApi.Services;
 using Library.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory; // ControllerBase lives here
 
@@ -132,6 +133,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpDelete("sku")]
+    [Authorize(Roles = "admin")] 
     public async Task<ActionResult> Delete(string sku)
     {
         bool isDeleted = await _service.RemoveAsync(sku);
@@ -154,6 +156,7 @@ public class InventoryController : ControllerBase
     // New GET that uses that SupplierClient to call an outside API
     // Localhost:5173/api/Inventory/{sku}/supplier-price
     [HttpGet("{sku}/supplier-price")]
+    [Authorize(Roles = "admin")] // No valid token returns a 401. No code ever runs. Any role but "admin" = 403.
     public async Task<IActionResult> GetSupplierPrice(string sku)
     {
         // Call our supplier with the httpclient code
@@ -166,6 +169,6 @@ public class InventoryController : ControllerBase
 
         //Returning an inline object for now, no DTO
         return Ok(new{sku, supplierPrice=price});
-        
+
     }
 }
