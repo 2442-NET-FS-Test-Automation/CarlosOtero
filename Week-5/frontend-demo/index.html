@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> <!-- These are HTML Comments-->
+    <!-- Head contains metadata about the document
+        things like language, charsets, etc. Doesn't render -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Catalog</title>
+</head>
+<body>
+    <!-- Body contains the stuff that DOES render. Tipically (always) within HTML elements -->
+
+    <!-- Some attributes are for CSS - class and id being the two that come to mind
+            id =unique. Only this element can be identiied by this ide-->
+    
+    <header class="site-header">
+        <h1 id="heading">City Library</h1> <!-- These are HTML elements -->
+        <nav class="site-nav">
+            <a href="index.html">Catalog</a> <!-- Elements can have attributes, like href which lets your browser know what HTML page-->
+            <a href="login.html">Sign in</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="catalog"> <!--Some elements are self closing-->
+            <h2>Catalog</h2>
+            <div class="toolbar">
+                <!-- Our first input - a placeholder for searching the catalog-->
+                <label for="search">Search:</label>
+                <input type="search" name="search" placeholder="title or SKU"> <!--Self closing-->
+                <span class="hint">try a SKU like BK-001</span>
+            </div>
+            <div class="cards" id="catalog-cards">
+                <article class="card">
+                    <h3>Clean code</h3>
+                    <dl>
+                        <dt>SKU</dt><dd>BK-001</dd>
+                        <dt>Price</dt><dd>29.99</dd>
+                        <dt>In Stock</dt><dd>12</dd>
+                    </dl>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>City library -- frontend demo (Library Domain) from earlier</p>
+    </footer>
+</body>
+</html>
