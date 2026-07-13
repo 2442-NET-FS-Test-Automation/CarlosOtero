@@ -389,7 +389,7 @@ app.MapPost("/orders-with-factory", async (OrderRequest req, OrderFactory factor
 // My file always ends with app.Run() - minimal API or Controller API
 
 app.Run();
-Log.CloseAndFlush();
+Log.CloseAndFlush(); // Close and flush the logs (serilog)
 public record OrderPayload(int ProductId, int Quantity, int CustomerId);
 public record OrderLineRequest(string Sku, int Qty);
 public record OrderRequest(string Kind, int CustomerId, List<OrderLineRequest> Lines);
