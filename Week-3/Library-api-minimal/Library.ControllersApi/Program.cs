@@ -9,6 +9,8 @@ using Library.ControllersApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Library.Data.Entities;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,6 +60,9 @@ builder.Services.AddAuthorization(); // Goes after authentication
 // token Issuance is a plain injectable service. It's stateless so we can use a singleton
 builder.Services.AddSingleton<ITokenService,TokenService>();
 
+// Adding the password hasher
+builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+
 // Adding our HttpClient
 builder.Services.AddHttpClient<ISupplierClient, SupplierClient>(c=>
     c.BaseAddress = new Uri("https://dummyjson.com/") // all calls append to this URL
@@ -66,8 +71,9 @@ builder.Services.AddHttpClient<ISupplierClient, SupplierClient>(c=>
 builder.Services.AddDbContextFactory<LibraryDbContext>(o => o.UseSqlServer(conn_string));
 
 // Registering our custom Repo and Service Layer methods like we did before
-builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>(); // Could later swap doe InventoryMongoRepo
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IUserService,UserService>();
 
 // Adding our mapping profile for AutoMapper
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
@@ -85,6 +91,27 @@ builder.Services.AddMemoryCache(); // adding cache-ing to our server
 builder.Services.AddResponseCaching(); // adding response cache-ing - asking the front-end to save request results
 
 var app = builder.Build();
+
+// Seeding admins - Can't do a plain INSERT INTO using SQL because I won't have a hashed password
+// Might be able to do it in LibraryDbContext - Would have to check how to do that
+
+using(var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<LibraryDbContext>();
+    // We want this to be idempotent. This block of code runs EVERY time the app starts
+    // BUT we only want to seed our admin(s) ONCE
+    if (!db.Users.Any(u=>u.Role == "admin"))
+    {
+        var hasher = new PasswordHasher<User>();
+        var admin = new User {UserName = "ada", Role = "admin"};
+
+        // I should put that password inside of some secret (non GH committed) file
+        admin.PasswordHash = hasher.HashPassword(admin,"pass123!"); // Put this in the config file pls!
+
+        db.Users.Add(admin);
+        db.SaveChanges();
+    }
+}
 
 app.UseMiddleware<ExceptionHandlingMiddleware>(); // Wraps all middleware below it, catches their exceptions
 

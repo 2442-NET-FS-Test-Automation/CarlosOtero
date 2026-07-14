@@ -33,14 +33,14 @@ public class TokenService : ITokenService
     // This token, once the front end has it (i.e User has logged in), gets appended to every
     //http request. For some endpoints, we will validate the token, and if the user isn't authorized to do
     // a given action we send back 401 unauthorized
-    public string Issue(string user)
+    public string Issue(string user, string role)
     {
         // Sign the token with the symmetric key (HMAC-SHA256) - the key 
         var creds = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key)), SecurityAlgorithms.HmacSha256);
 
         // if user is "ada" they get admin, otherwise they get "consumer"
-        var role = Roles.GetValueOrDefault(user, "consumer");
+        //var role = Roles.GetValueOrDefault(user, "consumer");
         // Onve we have creds (that key we can sign with) we can register claims
         // things like user role. We can also give the key an expiration date/time
         var token = new JwtSecurityToken("library-fulfillment", "library-fulfillment-clients",
