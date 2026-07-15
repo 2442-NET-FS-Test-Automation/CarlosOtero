@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library Catalog</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="JS/auth.js" defer></script>
+    <script src="JS/app.js" defer></script>
 </head>
 <body>
     <!-- Body contains the stuff that DOES render. Tipically (always) within HTML elements -->
@@ -28,14 +30,14 @@
             <div class="toolbar">
                 <!-- Our first input - a placeholder for searching the catalog-->
                 <label for="search">Search:</label>
-                <input type="search" name="search" placeholder="title or SKU"> <!--Self closing-->
+                 <input type="search" id="search" name="search" placeholder="title or SKU"> <!--Self closing-->
                 <span class="hint">try a SKU like BK-001</span>
             </div>
-            <div class="cards" id="catalog-cards">
+                <div class="cards" id="catalog-cards">
                 <article class="card">
-                    <h3>Clean code</h3>
+                    <h3>Clean Code</h3>
                     <dl>
-                        <dt>SKU</dt><dd>BK-001</dd>
+                        <dt>SKU</dt><dd>BK-101</dd>
                         <dt>Price</dt><dd>29.99</dd>
                         <dt>In Stock</dt><dd>12</dd>
                     </dl>
@@ -43,7 +45,7 @@
                 <article class="card">
                     <h3>Dune</h3>
                     <dl>
-                        <dt>SKU</dt><dd>BK-002</dd>
+                        <dt>SKU</dt><dd>BK-102</dd>
                         <dt>Price</dt><dd>19.99</dd>
                         <dt>In Stock</dt><dd>5</dd>
                     </dl>
@@ -51,12 +53,14 @@
                 <article class="card">
                     <h3>MDN Docs</h3>
                     <dl>
-                        <dt>SKU</dt><dd>BK-003</dd>
+                        <dt>SKU</dt><dd>BK-103</dd>
                         <dt>Price</dt><dd>14.99</dd>
                         <dt>In Stock</dt><dd>6</dd>
                     </dl>
                 </article>
             </div>
+
+
         </section>
     </main>
 
