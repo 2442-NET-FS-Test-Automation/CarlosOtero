@@ -31,8 +31,8 @@ builder.Host.UseSerilog(); // tell the builder to use Serilog for logging
 const string SpaCorsPolicy = "spa"; // string nme for our policy
 
 // Configuring our CORS policy
-builder.Services.AddCors(o=>o.AddPolicy(SpaCorsPolicy, p=> p
-    .WithOrigins("http://localhost:3000")
+builder.Services.AddCors(o => o.AddPolicy(SpaCorsPolicy, p => p
+    .WithOrigins("http://localhost:5500", "http://127.0.0.1:5500")
     .AllowAnyHeader()
     .AllowAnyMethod()
 ));
@@ -47,24 +47,27 @@ const string jwtIssuer = "library-fulfillment";
 const string jwtAudience = "library-fulfillment-clients";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o=>o.TokenValidationParameters =new TokenValidationParameters
+    .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true, ValidIssuer = jwtIssuer,
-        ValidateAudience = true, ValidAudience = jwtAudience,
-        ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ValidateLifetime = true
     });
 
 builder.Services.AddAuthorization(); // Goes after authentication
 
 // token Issuance is a plain injectable service. It's stateless so we can use a singleton
-builder.Services.AddSingleton<ITokenService,TokenService>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
 
 // Adding the password hasher
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // Adding our HttpClient
-builder.Services.AddHttpClient<ISupplierClient, SupplierClient>(c=>
+builder.Services.AddHttpClient<ISupplierClient, SupplierClient>(c =>
     c.BaseAddress = new Uri("https://dummyjson.com/") // all calls append to this URL
 );
 
@@ -73,7 +76,7 @@ builder.Services.AddDbContextFactory<LibraryDbContext>(o => o.UseSqlServer(conn_
 // Registering our custom Repo and Service Layer methods like we did before
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>(); // Could later swap doe InventoryMongoRepo
 builder.Services.AddScoped<IInventoryService, InventoryService>();
-builder.Services.AddScoped<IUserService,UserService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Adding our mapping profile for AutoMapper
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
@@ -95,18 +98,18 @@ var app = builder.Build();
 // Seeding admins - Can't do a plain INSERT INTO using SQL because I won't have a hashed password
 // Might be able to do it in LibraryDbContext - Would have to check how to do that
 
-using(var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<LibraryDbContext>();
     // We want this to be idempotent. This block of code runs EVERY time the app starts
     // BUT we only want to seed our admin(s) ONCE
-    if (!db.Users.Any(u=>u.Role == "admin"))
+    if (!db.Users.Any(u => u.Role == "admin"))
     {
         var hasher = new PasswordHasher<User>();
-        var admin = new User {UserName = "ada", Role = "admin"};
+        var admin = new User { UserName = "ada", Role = "admin" };
 
         // I should put that password inside of some secret (non GH committed) file
-        admin.PasswordHash = hasher.HashPassword(admin,"pass123!"); // Put this in the config file pls!
+        admin.PasswordHash = hasher.HashPassword(admin, "pass123!"); // Put this in the config file pls!
 
         db.Users.Add(admin);
         db.SaveChanges();
