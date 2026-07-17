@@ -1,0 +1,61 @@
+// TS has interfaces as well as classes 
+// We will use interfaces A LOT as type contracts
+// for incoming data from our API, mirroring our ASP.NET API's DTO's
+// The main pain point is we need the field names to be 1:1
+
+// Mirror InventoryDTO (GET /api/Inventory)
+
+export interface InventoryItem{
+    sku: string; // we'll change this later....
+    name: string;
+    currentStock: number;
+}
+
+
+// Export just let's us import into other TS files later on
+export interface SupplierPrice{
+    sku: string; //this one too
+    supplierPrice: number;
+}
+
+// More TS types
+
+// We can use  type aliases to give a custom name to any type
+// Useful for documenting semantic meaning/intent
+export type Sku = string; // aliasing strings as Skus
+
+// Union type: a type that allows a variable to be one of several types
+// usefult for creating custom types to allow for multiple parameter types in a method
+// can also use it like an enum
+export type FetchState = "idle" | "loading" | "loaded" | "failed"
+
+let accountId: string | number; // now this variable can hold either type, a Union
+
+// Enums - let's use a numeric enum to list out our error codes
+// that we can expect to get back from API
+
+export enum HttpStatus {
+    Ok = 200,
+    Created = 201,
+    NoContent = 204,
+    BadRequest = 400,
+    Unauthorized = 401,
+    Forbidden = 403,
+    NotFound = 404
+}
+
+// String enum - same logic as C# enums, same as the one above
+export enum SortDirection{
+    Ascending = "asc",
+    Descending = "desc"
+}
+
+// Utility types - we can derive types from existing types
+// saves you time typing
+
+// Partial<T>: just makes every field optional
+export type InventoryPatch = Partial<InventoryItem>;
+
+// Omit<T, K>: Take a type and shave off a property. In our case the server assigns a sku
+// so we don't need to send it
+export type NewInventoryItem = Omit<InventoryItem, "sku">;
