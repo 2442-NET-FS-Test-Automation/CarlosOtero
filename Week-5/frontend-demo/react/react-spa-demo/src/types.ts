@@ -29,26 +29,27 @@ export type Sku = string; // aliasing strings as Skus
 // can also use it like an enum
 export type FetchState = "idle" | "loading" | "loaded" | "failed"
 
-let accountId: string | number; // now this variable can hold either type, a Union
 
 // Enums - let's use a numeric enum to list out our error codes
 // that we can expect to get back from API
 
-export enum HttpStatus {
-    Ok = 200,
-    Created = 201,
-    NoContent = 204,
-    BadRequest = 400,
-    Unauthorized = 401,
-    Forbidden = 403,
-    NotFound = 404
-}
+export const HttpStatus = {
+    Ok : 200,
+    Created : 201,
+    NoContent : 204,
+    BadRequest : 400,
+    Unauthorized : 401,
+    Forbidden : 403,
+    NotFound : 404
+} as const;
+export type HttpStatus = typeof HttpStatus[keyof typeof HttpStatus];
 
 // String enum - same logic as C# enums, same as the one above
-export enum SortDirection{
-    Ascending = "asc",
-    Descending = "desc"
-}
+export const SortDirection = {
+    Ascending : "asc",
+    Descending : "desc"
+} as const
+export type SortDirection = typeof SortDirection[keyof typeof SortDirection];
 
 // Utility types - we can derive types from existing types
 // saves you time typing
